@@ -169,7 +169,7 @@ const Navbar = () => {
                 <Link
                   to="/login"
                   onClick={() => setIsOpen(false)}
-                  className="block bg-blue-600 text-white px-4 py-1 rounded text-center hover:bg-blue-700"
+                  className="block bg-amber-600 text-white px-4 py-1 rounded text-center hover:bg-amber-700"
                 >
                   Login
                 </Link>
