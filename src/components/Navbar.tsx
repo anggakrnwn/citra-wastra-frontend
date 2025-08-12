@@ -1,49 +1,15 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import wastralogo from "../assets/wastralogo.svg";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { auth } from "../services/firebase";
+import NavLinks  from "./layouts/NavLinks";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
-
-  const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Deteksi Motif", path: "/deteksi-motif" },
-    { name: "Galeri", path: "/gallery-page" },
-    { name: "Contribution", path: "/contribution" },
-    { name: "About", path: "/about" },
-  ];
-
-  const NavLinks = ({
-    onClick,
-    mobile,
-  }: {
-    onClick?: () => void;
-    mobile?: boolean;
-  }) => (
-    <>
-      {navItems.map(({ name, path }) => (
-        <NavLink
-          key={path}
-          to={path}
-          onClick={onClick}
-          className={({ isActive }) =>
-            `${mobile ? "block py-2" : ""} ${
-              isActive
-                ? "text-amber-600 font-semibold border-b-2 border-amber-600 pb-1 transition"
-                : "text-gray-700 hover:text-amber-600 pb-1 transition"
-            }`
-          }
-        >
-          {name}
-        </NavLink>
-      ))}
-    </>
-  );
 
   const UserAvatar = ({ photoURL }: { photoURL: string | null }) =>
     photoURL ? (
@@ -113,7 +79,7 @@ const Navbar = () => {
           {/* Hamburger button (mobile) */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-700 hover:text-blue-600 focus:outline-none"
+            className="md:hidden text-gray-700 hover:text-amber-600 focus:outline-none"
           >
             {isOpen ? (
               <svg
