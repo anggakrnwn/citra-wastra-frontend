@@ -25,8 +25,8 @@ const HeroSection: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-screen md:min-h-screen bg-white flex items-center justify-center pt-8 pb-20 px-6 overflow-hidden">
-      <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+    <section className="relative min-h-screen bg-white flex items-center justify-center pt-8 pb-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div>
           <div className="flex space-x-2 mb-6">
             {Array.from({ length: 3 }, (_, i) => (
