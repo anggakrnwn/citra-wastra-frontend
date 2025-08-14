@@ -25,7 +25,7 @@ const HeroSection: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-screen bg-white flex items-center justify-center pt-8 pb-20 overflow-hidden">
+    <section className="relative min-h-screen bg-white flex items-center justify-center py-16 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div>
           <div className="flex space-x-2 mb-6">
@@ -35,12 +35,12 @@ const HeroSection: React.FC = () => {
           </div>
 
           <div className="animate-slide-in-left">
-            <h1 className="text-5xl font-extrabold text-gray-900 leading-tight">
+            <h1 className="text-display font-extrabold text-gray-900 leading-tight">
               Preserving Tradition with{" "}
               <span className="text-amber-700 underline">Citra Wastra</span>
             </h1>
 
-            <p className="mt-6 max-w-md text-gray-600 text-lg leading-relaxed">
+            <p className="mt-6 max-w-md text-body-lg text-gray-600 leading-relaxed">
               <strong>Citra Wastra</strong> uses advanced machine learning to
               identify the origin and pattern of traditional Indonesian batik,
               making cultural heritage more accessible, recognizable, and
