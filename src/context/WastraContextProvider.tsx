@@ -1,20 +1,27 @@
-import type { ReactNode } from "react"
-import { WastraContext } from "./WastraContext"
-
+import { useEffect, useState, type ReactNode } from "react";
+import { WastraContext } from "./WastraContext";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { auth } from "../services/firebase";
 
 interface WastraContextProviderProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 export const WastraContextProvider = ({ children }: WastraContextProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    const value = {
-        user: "angga"
-    }
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
-    return (
-        <WastraContext.Provider value={value} >
-            {children}
-        </WastraContext.Provider>
-    )
-}
+  return (
+    <WastraContext.Provider value={{ user, loading }}>
+      {children}
+    </WastraContext.Provider>
+  );
+};

@@ -8,7 +8,7 @@ interface NavlinksProps {
 
 const navItems = [
   { name: "Home", path: "/" },
-  { name: "Deteksi Motif", path: "/deteksi-motif" },
+  { name: "Detection", path: "/detection-page" },
   { name: "Galeri", path: "/gallery-page" },
   { name: "Contribution", path: "/contribution" },
   { name: "About", path: "/about" },

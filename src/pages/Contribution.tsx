@@ -2,7 +2,9 @@
 
 const Contribution = () => {
   return (
-    <div>Ini Contribution</div>
+    <div>
+      <h1>test contri</h1>
+    </div>
   )
 }
 

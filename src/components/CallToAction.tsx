@@ -1,8 +1,19 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useWastra } from "../context/WastraContext";
+
 
 const CallToAction: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useWastra();
+  
+    const handleLaunchApp = () => {
+      if (user) {
+        navigate("/detection-page"); 
+      } else {
+        navigate("/login"); 
+      }
+    };
 
   return (
     <section className="bg-amber-600 py-16">
@@ -16,13 +27,13 @@ const CallToAction: React.FC = () => {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <button
-            onClick={() => navigate("/app")}
+            onClick={handleLaunchApp}
             className="bg-white text-amber-700 px-6 py-3 rounded-md font-semibold text-body hover:bg-gray-100 transition"
           >
             Try the App →
           </button>
           <button
-            onClick={() => navigate("/app")}
+            onClick={handleLaunchApp}
             className="bg-amber-700 text-white px-6 py-3 rounded-md font-semibold text-body hover:bg-amber-800 transition"
           >
             Upload Your Batik

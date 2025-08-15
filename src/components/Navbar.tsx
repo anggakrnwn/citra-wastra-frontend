@@ -5,11 +5,13 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { auth } from "../services/firebase";
 import NavLinks  from "./layouts/NavLinks";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const navigate = useNavigate();
 
   const UserAvatar = ({ photoURL }: { photoURL: string | null }) =>
     photoURL ? (
@@ -32,13 +34,14 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      await signOut(auth);
-    } finally {
-      setLoggingOut(false);
-    }
-  };
+  setLoggingOut(true);
+  try {
+    await signOut(auth);
+    navigate("/");
+  } finally {
+    setLoggingOut(false);
+  }
+};
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 left-0 z-50">

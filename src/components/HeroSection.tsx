@@ -6,6 +6,7 @@ import hero3 from "../assets/images/hero3.jpeg";
 import hero4 from "../assets/images/hero4.jpeg";
 import star1 from "../assets/icons/starwastra1.png";
 import star2 from "../assets/icons/starwastra2.png";
+import { useWastra } from "../context/WastraContext"; 
 
 interface ImageItem {
   src: string;
@@ -23,6 +24,15 @@ const delayClasses = ["delay-0", "delay-200", "delay-400", "delay-600"];
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useWastra();
+
+  const handleLaunchApp = () => {
+    if (user) {
+      navigate("/detection-page"); 
+    } else {
+      navigate("/login"); 
+    }
+  };
 
   return (
     <section className="relative min-h-screen bg-white flex items-center justify-center py-16 overflow-hidden">
@@ -49,7 +59,7 @@ const HeroSection: React.FC = () => {
           </div>
 
           <button
-            onClick={() => navigate("/app")}
+            onClick={handleLaunchApp}
             className="mt-8 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md font-semibold transition"
             aria-label="Launch Citra Wastra App"
           >
