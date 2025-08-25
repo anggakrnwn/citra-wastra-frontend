@@ -35,7 +35,7 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-screen bg-white flex items-center justify-center py-16 overflow-hidden">
+    <section className="relative min-h-screen bg-white flex items-center justify-center py-10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div>
           <div className="flex space-x-2 mb-6">

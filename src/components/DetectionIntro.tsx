@@ -48,7 +48,7 @@ const DetectionIntro: React.FC = () => {
   };
 
   return (
-    <section className="relative bg-white py-16 overflow-hidden">
+    <section className="relative bg-white py-10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
       
         <div className="animate-slide-in-left">
