@@ -1,9 +1,17 @@
 import { createContext, useContext } from "react";
-import { type User } from "firebase/auth";
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+}
 
 interface WastraContextType {
   user: User | null;
   loading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => void;
 }
 
 export const WastraContext = createContext<WastraContextType | undefined>(undefined);

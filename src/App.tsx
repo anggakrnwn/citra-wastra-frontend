@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import { WastraContextProvider } from "./context/WastraContextProvider";
-import GalleryPage from "./pages/GalleryPage";
+import GalleryPage from "./pages/MotifExplorer";
 import About from "./pages/About";
-import Contribution from "./pages/Contribution";
+import WastraQuiz from "./pages/WastraQuiz";
 import AuthPage from "./pages/AuthPage";
 import MainLayout from "./components/layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -28,10 +28,10 @@ function App() {
             }
           />
           <Route
-            path="/contribution"
+            path="/WastraQuiz"
             element={
               <ProtectedRoute>
-                <Contribution />
+                <WastraQuiz />
               </ProtectedRoute>
             }
           />

@@ -1,10 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { WastraContext } from "./WastraContext";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth } from "../services/firebase";
+import { WastraContext, type User } from "./WastraContext";
+import { authService } from "../services/api";
+import { AxiosError } from "axios";
 
 interface WastraContextProviderProps {
   children: ReactNode;
+}
+
+interface AuthResponse {
+  success: boolean;
+  message?: string;
 }
 
 export const WastraContextProvider = ({ children }: WastraContextProviderProps) => {
@@ -12,15 +17,74 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch {
+        localStorage.removeItem("user");
+        setUser(null);
+      }
+    }
+    setLoading(false);
   }, []);
 
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
+    try {
+      const response = await authService.login(email, password);
+      const { token, user } = response.data;
+
+      if (token && user) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+        return { success: true };
+      }
+      return { success: false, message: "Login failed: no token received" };
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        return {
+          success: false,
+          message: error.response?.data?.message || "Login failed",
+        };
+      }
+      return { success: false, message: "Login failed" };
+    }
+  };
+
+  const register = async (name: string, email: string, password: string): Promise<AuthResponse> => {
+    try {
+      const response = await authService.register(name, email, password);
+      const { token, user } = response.data;
+
+      if (token && user) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+        return { success: true };
+      }
+      return { success: false, message: "Registration failed: no token received" };
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        return {
+          success: false,
+          message: error.response?.data?.message || "Registration failed",
+        };
+      }
+      return { success: false, message: "Registration failed" };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
   return (
-    <WastraContext.Provider value={{ user, loading }}>
+    <WastraContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </WastraContext.Provider>
   );

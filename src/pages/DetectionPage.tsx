@@ -2,16 +2,31 @@ import React, { useState, useContext } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
 
+interface TopPrediction {
+  class: string;
+  confidence: number;
+}
+
+interface DetectionData {
+  prediction: string;
+  confidence: number;
+  top_predictions: TopPrediction[];
+  timestamp: string;
+}
+
+interface DetectionResponse {
+  success: boolean;
+  data: DetectionData;
+}
+
 const DetectionPage: React.FC = () => {
-  const { user, loading } = useContext(WastraContext)!; 
+  const { user, loading } = useContext(WastraContext)!;
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<null | {
-    motif: string;
-    origin: string;
-    description: string;
-  }>(null);
+  const [result, setResult] = useState<DetectionData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (loading) {
     return <p className="text-center mt-6">Checking login status...</p>;
@@ -22,54 +37,78 @@ const DetectionPage: React.FC = () => {
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setResult(null);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setResult(null);
+    setError(null);
   };
 
-  // Simulated detection process
-  const handleProcess = async () => {
-    if (!selectedImage) return;
-    setProcessing(true);
+  const resetImage = () => {
+    setSelectedImage(null);
+    setPreviewUrl(null);
+    setResult(null);
+    setError(null);
+  };
 
-    setTimeout(() => {
-      setResult({
-        motif: "Parang",
-        origin: "Yogyakarta, Indonesia",
-        description:
-          "The Parang motif symbolizes strength, courage, and determination.",
+  const handleProcess = async () => {
+    if (!selectedImage) {
+      setError("Pilih gambar terlebih dahulu!");
+      return;
+    }
+
+    setProcessing(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Kamu harus login terlebih dahulu!");
+
+      const response = await fetch("http://localhost:8080/api/predict", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const json: DetectionResponse = await response.json();
+      if (json.success && json.data) {
+        setResult(json.data);
+      } else {
+        setError("Response backend tidak valid");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+    } finally {
       setProcessing(false);
-    }, 1500);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-center mb-4">
+      <h1 className="text-3xl font-bold text-center mb-4 text-gray-800">
         Batik Motif Detection
       </h1>
       <p className="text-lg text-center text-gray-600 mb-8">
         Upload your batik photo and let our AI recognize its motif and origin.
       </p>
 
-      <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+      <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:border-orange-400 transition">
         {previewUrl ? (
           <div>
             <img
               src={previewUrl}
               alt="Preview"
-              className="mx-auto max-h-64 object-contain rounded-lg mb-4"
+              className="mx-auto max-h-64 object-contain rounded-lg mb-4 shadow"
             />
             <button
-              onClick={() => {
-                setSelectedImage(null);
-                setPreviewUrl(null);
-                setResult(null);
-              }}
-              className="text-sm text-red-500 hover:underline mb-4"
+              onClick={resetImage}
+              className="text-sm text-red-600 hover:underline mb-4"
             >
               Change image
             </button>
@@ -92,28 +131,60 @@ const DetectionPage: React.FC = () => {
         )}
       </div>
 
-      {selectedImage && !processing && (
+      {selectedImage && (
         <div className="text-center mt-6">
           <button
             onClick={handleProcess}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            disabled={processing}
+            className={`px-6 py-3 rounded-lg text-white font-medium transition ${
+              processing
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
           >
-            Start Detection
+            {processing ? "Processing..." : "Start Detection"}
           </button>
         </div>
       )}
 
-      {processing && (
-        <p className="text-center mt-6 text-gray-500">Processing image...</p>
+      {error && (
+        <p className="mt-4 text-center text-red-500 font-semibold">{error}</p>
       )}
 
       {result && (
-        <div className="mt-8 p-6 bg-gray-100 rounded-xl shadow-md">
-          <h2 className="text-2xl font-semibold mb-2">{result.motif}</h2>
-          <p className="text-gray-700 mb-1">
-            <strong>Origin:</strong> {result.origin}
-          </p>
-          <p className="text-gray-600">{result.description}</p>
+        <div className="mt-8 p-6 bg-white rounded-xl shadow-md border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold text-gray-800">
+              {result.prediction}
+            </h2>
+            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+              {(result.confidence * 100).toFixed(2)}%
+            </span>
+          </div>
+
+          {Array.isArray(result.top_predictions) &&
+          result.top_predictions.length > 0 ? (
+            <div>
+              <h3 className="text-lg font-medium mb-2 text-gray-700">
+                Top-3 Predictions:
+              </h3>
+              <ul className="space-y-2">
+                {result.top_predictions.map((p, i) => (
+                  <li
+                    key={i}
+                    className="flex justify-between items-center bg-gray-50 px-4 py-2 rounded-lg shadow-sm"
+                  >
+                    <span className="font-medium text-gray-800">{p.class}</span>
+                    <span className="text-sm text-gray-600">
+                      {(p.confidence * 100).toFixed(2)}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-gray-400 mt-2">Belum ada prediksi top-3</p>
+          )}
         </div>
       )}
     </div>

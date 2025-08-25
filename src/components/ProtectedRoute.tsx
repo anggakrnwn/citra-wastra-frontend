@@ -1,16 +1,20 @@
-import { Navigate } from "react-router-dom";
-import { type ReactNode } from "react";
+// src/components/ProtectedRoute.tsx
 import { useWastra } from "../context/WastraContext";
+import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useWastra();
 
   if (loading) {
-    return <div className="p-4 text-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -18,4 +22,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return <>{children}</>;
-}
+};
+
+export default ProtectedRoute;

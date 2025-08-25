@@ -1,71 +1,59 @@
+// src/components/Navbar.tsx
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useWastra } from "../context/WastraContext";
+import NavLinks from "./layouts/NavLinks";
 import wastralogo from "../assets/wastralogo.svg";
-import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import type { User } from "firebase/auth";
-import { auth } from "../services/firebase";
-import NavLinks  from "./layouts/NavLinks";
-import { useNavigate } from "react-router-dom";
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useWastra();
   const [loggingOut, setLoggingOut] = useState(false);
-  const navigate = useNavigate();
 
-  const UserAvatar = ({ photoURL }: { photoURL: string | null }) =>
-    photoURL ? (
-      <img
-        src={photoURL}
-        alt="User Avatar"
-        className="w-8 h-8 rounded-full border"
-      />
-    ) : (
+  const UserAvatar = ({ name }: { name?: string }) => {
+    const initial = name?.charAt(0).toUpperCase() || "U";
+    return (
       <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-        <span className="text-xs text-gray-600">U</span>
+        <span className="text-sm font-semibold text-gray-700">{initial}</span>
       </div>
     );
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsub();
-  }, []);
+  };
 
   const handleLogout = async () => {
-  setLoggingOut(true);
-  try {
-    await signOut(auth);
-    navigate("/");
-  } finally {
-    setLoggingOut(false);
-  }
-};
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+      setIsOpen(false);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 left-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
+          {/* Logo */}
           <Link to="/" className="flex items-center">
             <img src={wastralogo} alt="Wastra Logo" className="h-10 w-auto" />
           </Link>
 
           {/* Menu (desktop) */}
           <div className="hidden md:flex space-x-6">
-            <NavLinks />
+            <NavLinks mobile={false} />
           </div>
 
           {/* User section */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <span className="text-gray-700">
-                  {user.displayName || "User"}
-                </span>
-
-                <UserAvatar photoURL={user.photoURL} />
-                <button onClick={handleLogout} disabled={loggingOut}>
+                <span className="text-gray-700">{user.name || "User"}</span>
+                <UserAvatar name={user.name} />
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="bg-amber-600 text-white px-4 py-1 rounded hover:bg-amber-700"
+                >
                   {loggingOut ? "Logging out..." : "Logout"}
                 </button>
               </>
@@ -117,7 +105,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Menu (mobile) */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-white shadow-lg">
           <div className="px-4 py-3 space-y-2">
@@ -126,11 +114,13 @@ const Navbar = () => {
             <div className="pt-3 border-t">
               {user ? (
                 <div className="flex items-center gap-3">
-                  <UserAvatar photoURL={user.photoURL} />
-                  <span className="text-gray-700">
-                    {user.displayName || "User"}
-                  </span>
-                  <button onClick={handleLogout} disabled={loggingOut}>
+                  <UserAvatar name={user.name} />
+                  <span className="text-gray-700">{user.name || "User"}</span>
+                  <button
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="text-red-600 hover:text-red-800"
+                  >
                     {loggingOut ? "Logging out..." : "Logout"}
                   </button>
                 </div>

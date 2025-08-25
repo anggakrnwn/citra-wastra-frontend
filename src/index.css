@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 /* Animasi masuk dari kiri */
 @keyframes slideInLeft {
   0% {
