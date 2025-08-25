@@ -28,6 +28,9 @@ const DetectionPage: React.FC = () => {
   const [result, setResult] = useState<DetectionData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
   if (loading) {
     return <p className="text-center mt-6">Checking login status...</p>;
   }
@@ -68,7 +71,7 @@ const DetectionPage: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Kamu harus login terlebih dahulu!");
 
-      const response = await fetch("http://localhost:8080/api/predict", {
+      const response = await fetch(`${API_BASE_URL}/predict`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
