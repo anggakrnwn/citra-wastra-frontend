@@ -80,7 +80,7 @@ const TeamProfile = () => (
     {/* Social Icons */}
     <div className="flex gap-4">
       <a
-        href="https://github.com/username"
+        href="https://github.com/anggakrnwn"
         target="_blank"
         rel="noopener noreferrer"
         className="text-gray-700 hover:text-amber-700 transition-colors"
@@ -88,7 +88,7 @@ const TeamProfile = () => (
         <Github size={24} />
       </a>
       <a
-        href="https://linkedin.com/in/username"
+        href="https://www.linkedin.com/in/anggakrnwn/"
         target="_blank"
         rel="noopener noreferrer"
         className="text-gray-700 hover:text-amber-700 transition-colors"
