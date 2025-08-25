@@ -1,24 +1,27 @@
 import React from "react";
-import { FaSearch, FaClock, FaGlobe, FaShieldAlt } from "react-icons/fa";
+import kaca from "../assets/icons/kaca.svg";
+import jam from "../assets/icons/jam.svg";
+import bumi from "../assets/icons/bumi.svg";
+import budaya from "../assets/icons/budaya.svg";
 
 const benefitsList = [
   {
-    icon: <FaSearch className="text-amber-600 text-3xl" />,
+    icon: <img src={kaca} alt="kamera" className="text-amber-600 w-8 h-8" />,
     title: "Accurate Recognition",
     desc: "Advanced AI technology ensures high accuracy in identifying batik patterns and origins.",
   },
   {
-    icon: <FaClock className="text-amber-600 text-3xl" />,
+    icon: <img src={jam} alt="kamera" className="text-amber-600 w-8 h-8" />,
     title: "Fast & Efficient",
     desc: "Get instant results in seconds without complicated steps or manual searching.",
   },
   {
-    icon: <FaGlobe className="text-amber-600 text-3xl" />,
+    icon: <img src={bumi} alt="kamera" className="text-amber-600 w-8 h-8" />,
     title: "Accessible Anywhere",
     desc: "Use Citra Wastra from any device, anywhere in the world.",
   },
   {
-    icon: <FaShieldAlt className="text-amber-600 text-3xl" />,
+    icon: <img src={budaya} alt="kamera" className="text-amber-600 w-8 h-8" />,
     title: "Cultural Preservation",
     desc: "Helping to preserve and promote Indonesia's cultural heritage in the digital era.",
   },

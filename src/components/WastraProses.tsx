@@ -1,27 +1,30 @@
 import React, { useState } from "react";
-import { FaCamera, FaBrain, FaMapMarkerAlt, FaBookOpen } from "react-icons/fa";
 import flowImage from "../assets/images/wastraproses.png";
+import kamera from "../assets/icons/camera.svg";
+import insight from "../assets/icons/insight.svg";
+import lokasi from "../assets/icons/lokasi.svg";
+import catatan from "../assets/icons/catatan.svg";
 
 const prosesList = [
   {
     title: "Capture or Upload",
     desc: "Take a photo of the batik using your camera or upload one from your device’s gallery.",
-    icon: <FaCamera className="text-amber-600 text-3xl" />,
+    icon: <img src={kamera} alt="kamera" className="text-amber-600 w-8 h-8" />,
   },
   {
     title: "Pattern Recognition",
     desc: "The AI analyzes the batik’s motifs using machine learning to identify shapes, colors, and unique characteristics.",
-    icon: <FaBrain className="text-amber-600 text-3xl" />,
+    icon: <img src={insight} alt="insight" className="text-amber-600 w-8 h-8" />,
   },
   {
     title: "Origin Identification",
     desc: "The system matches the analysis results with its database to determine the batik’s region of origin and motif type.",
-    icon: <FaMapMarkerAlt className="text-amber-600 text-3xl" />,
+    icon: <img src={lokasi} alt="lokasi" className="text-amber-600 w-8 h-8" />,
   },
   {
     title: "Cultural Insight",
     desc: "Receive detailed information about the history, philosophy, and cultural meaning behind the detected batik motif.",
-    icon: <FaBookOpen className="text-amber-600 text-3xl" />,
+    icon: <img src={catatan} alt="budaya" className="text-amber-600 w-8 h-8" />,
   },
 ];
 
