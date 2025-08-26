@@ -1,115 +1,135 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Linkedin, Github } from "lucide-react";
 import profileangga from "../assets/images/profile.png";
-import { Github, Linkedin  } from "lucide-react";
+import profilerifqi from "../assets/images/rifqi.jpg";
+import profileyovis from "../assets/images/yovis.jpg";
+import aboutImg from "../assets/images/aboutimg.png";
 
-const blobAnimationStyles = `
-  @keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
-  }
-  .animate-blob {
-    animation: blob 7s infinite;
-  }
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
-`;
-
-const BlobBackground = () => (
-  <div className="absolute inset-0 overflow-hidden">
-    <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-    <div className="absolute bottom-0 right-0 w-80 h-80 bg-amber-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
-  </div>
-);
-
-const AboutText = () => (
-  <motion.div
-    initial={{ opacity: 0, x: -50 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.6 }}
-    className="space-y-6"
-  >
-    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-      <span className="text-amber-700">CitraWastra</span>
-    </h2>
-    <div className="w-24 h-1 bg-amber-700 mb-6"></div>
-    <p className="text-gray-700 text-lg leading-relaxed">
-      <span className="font-semibold text-amber-700">CitraWastra</span> is a digital 
-      platform that leverages AI to preserve and promote Indonesia's traditional 
-      textile heritage. By combining advanced image recognition with cultural 
-      knowledge, the platform provides an engaging way to identify and explore 
-      diverse wastra motifs.
-    </p>
-    <p className="text-gray-700 text-lg leading-relaxed">
-      Our mission is to make Indonesia's textile traditions more accessible, 
-      recognizable, and celebrated both locally and globally. Through modern 
-      technology, we aim to safeguard cultural heritage while offering interactive 
-      learning experiences for everyone.
-    </p>
-  </motion.div>
-);
-
-const TeamProfile = () => (
-  <motion.div
-    initial={{ opacity: 0, x: 50 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.6 }}
-    className="flex flex-col items-center"
-  >
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 300 }}
-      className="w-36 h-36 mb-4 relative"
-    >
-      <img
-        src={profileangga}
-        alt="Angga Kurniawan"
-        className="w-full h-full rounded-full object-cover border-4 border-amber-700 shadow-lg"
-      />
-    </motion.div>
-
-    <h4 className="font-bold text-xl text-gray-900 mb-1">Angga Kurniawan</h4>
-    <p className="text-amber-700 font-medium mb-4">Fullstack Developer</p>
-
-    {/* Social Icons */}
-    <div className="flex gap-4">
-      <a
-        href="https://github.com/anggakrnwn"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-gray-700 hover:text-amber-700 transition-colors"
-      >
-        <Github size={24} />
-      </a>
-      <a
-        href="https://www.linkedin.com/in/anggakrnwn/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-gray-700 hover:text-amber-700 transition-colors"
-      >
-        <Linkedin   size={24} />
-      </a>
-    </div>
-  </motion.div>
-);
+interface TeamMember {
+  name: string;
+  role: string;
+  img?: string;
+  linkedin: string;
+  github: string; 
+}
 
 const About: React.FC = () => {
-  return (
-    <section className="relative bg-white overflow-hidden py-16">
-      <BlobBackground />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
-        <AboutText />
-        <TeamProfile />
-      </div>
+  const team: TeamMember[] = [
+    {
+      name: "Angga Kurniawan",
+      role: "Fullstack Developer",
+      img: profileangga,
+      linkedin: "https://www.linkedin.com/in/anggakrnwn",
+      github: "https://github.com/angga",
+    },
+    {
+      name: "Rifqi Falih Ramadhan",
+      role: "Machine Learning Engineer",
+      img: profilerifqi,
+      linkedin: "https://www.linkedin.com/in/rifqifalihramadhan",
+      github: "https://github.com/rifqirama", 
+    },
+    {
+      name: "Yovis Yudo Karsodo",
+      role: "UI/UX Designer",
+      img: profileyovis,
+      linkedin: "https://www.linkedin.com/in/yovisyudokarsodo/",
+      github: "https://github.com/Yovisyudo", 
+    },
+  ];
 
-      <style>{blobAnimationStyles}</style>
+  return (
+    <section className="relative bg-gradient-to-b from-amber-100 via-white to-white py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <motion.img
+            src={aboutImg}
+            alt="Ilustrasi Citra Wastra"
+            className="hidden md:block w-full max-w-md mx-auto"
+            initial={{ x: -80, opacity: 0 }}
+            whileInView={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true }}
+          />
+
+          <motion.div
+            initial={{ x: 80, opacity: 0 }}
+            whileInView={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true }}
+          >
+            <h1 className="text-4xl font-extrabold mb-4 text-amber-700">
+              Citra Wastra
+            </h1>
+            <p className="text-lg leading-relaxed text-gray-700">
+              <strong>Citra Wastra </strong>
+              is a digital platform that leverages AI to preserve and promote
+              Indonesia's traditional textile heritage. By combining advanced
+              image recognition with cultural knowledge, the platform provides
+              an engaging way to identify and explore diverse wastra motifs.
+            </p>
+          </motion.div>
+        </div>
+
+        <div className="text-center mt-20">
+          <h2 className="text-3xl font-bold text-amber-700 mb-4">
+            Developer Team
+          </h2>
+          <p className="text-gray-600 mb-10">
+            We collaborate to preserve culture through technology
+          </p>
+          <div className="grid gap-8 md:grid-cols-3">
+            {team.map((member, i) => (
+              <motion.div
+                key={member.name}
+                className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: i * 0.2 }}
+                viewport={{ once: true }}
+              >
+                <img
+                  src={
+                    member.img ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      member.name
+                    )}&background=fcd34d&color=78350f`
+                  }
+                  alt={member.name}
+                  className="w-28 h-28 rounded-full object-cover mx-auto border-4 border-amber-700"
+                />
+
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <h3 className="font-bold text-lg text-amber-700">
+                    {member.name}
+                  </h3>
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-700 hover:text-amber-800 transition"
+                    aria-label={`LinkedIn ${member.name}`}
+                  >
+                    <Linkedin size={20} />
+                  </a>
+                  <a
+                    href={member.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-700 hover:text-amber-800 transition"
+                    aria-label={`GitHub ${member.name}`}
+                  >
+                    <Github size={20} />
+                  </a>
+                </div>
+
+                <p className="text-sm text-gray-500">{member.role}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
