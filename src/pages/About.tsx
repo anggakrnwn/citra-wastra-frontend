@@ -21,7 +21,7 @@ const About: React.FC = () => {
       role: "Fullstack Developer",
       img: profileangga,
       linkedin: "https://www.linkedin.com/in/anggakrnwn",
-      github: "https://github.com/angga",
+      github: "https://github.com/anggakrnwn",
     },
     {
       name: "Rifqi Falih Ramadhan",
