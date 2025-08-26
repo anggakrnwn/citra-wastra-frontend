@@ -24,9 +24,9 @@ const features = [
   },
   {
     icon: report,
-    title: "Detailed Reports",
+    title: "AI-Powered Identification",
     description:
-      "Generate and export comprehensive reports with historical and cultural context.",
+      "Identify and explore traditional textile patterns using AI technology.",
   },
   {
     icon: global,
