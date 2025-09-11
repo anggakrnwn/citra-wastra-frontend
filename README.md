@@ -1,4 +1,4 @@
-# Citra Wastra 🧵✨
+# Citra Wastra 🧵
 
 Citra Wastra is a **frontend web application** for classifying **Indonesian batik motifs**.  
 It is built with **React + TypeScript + Vite** and communicates with a private backend API (Express + Prisma + PostgreSQL).  
@@ -24,14 +24,6 @@ The purpose is to **preserve Indonesian cultural heritage** through technology b
 - React Router
 - Context API (state management)
 
----
-
-## Usage Flow 🔄
-
-![Usage Flow](./usage_flow_diagram.png) --> E[Display Result on Frontend]
-````
-
----
 
 ## Getting Started 🏁
 
