@@ -1,4 +1,3 @@
-// src/components/ProtectedRoute.tsx
 import { useWastra } from "../context/WastraContext";
 import { Navigate } from "react-router-dom";
 

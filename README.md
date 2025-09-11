@@ -1,69 +1,99 @@
-# React + TypeScript + Vite
+# Citra Wastra 🧵✨
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Citra Wastra is a **frontend web application** for classifying **Indonesian batik motifs**.  
+It is built with **React + TypeScript + Vite** and communicates with a private backend API (Express + Prisma + PostgreSQL).  
 
-Currently, two official plugins are available:
+The purpose is to **preserve Indonesian cultural heritage** through technology by making batik pattern recognition more accessible.  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Features 🚀
+- 🔐 User authentication (Register & Login)
+- 📤 Upload batik images
+- 🤖 Batik motif classification (via private backend API)
+- 📊 Confidence score for each prediction
+- 🎨 Clean UI with Tailwind CSS
+- 🌐 Optimized for deployment
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack 🛠
+- React + TypeScript + Vite
+- Tailwind CSS
+- Axios
+- React Router
+- Context API (state management)
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Usage Flow 🔄
+
+![Usage Flow](./usage_flow_diagram.png) --> E[Display Result on Frontend]
+````
+
+---
+
+## Getting Started 🏁
+
+### Prerequisites
+
+* Node.js v18+
+* pnpm / npm / yarn
+* Backend API URL (provided separately)
+
+### Installation
+
+```bash
+git clone https://github.com/yourusername/citra-wastra-frontend.git
+cd citra-wastra-frontend
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Environment Variables 🌱
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Create a `.env` file in the frontend root:
+
+```env
+VITE_API_URL=https://your-backend-url/api
 ```
+
+---
+
+## Project Structure 📂
+
+```
+src/
+ ├─ components/       # Reusable UI components
+ ├─ context/          # Global state (WastraContext)
+ ├─ pages/            # Auth, Upload, Result pages
+ ├─ services/         # API service (axios)
+ ├─ App.tsx           # Main app entry
+ └─ main.tsx          # Vite bootstrap
+```
+
+---
+
+## Future Plans 🔮
+
+* 📱 Mobile-friendly UI/UX
+* 🖼️ Multiple image uploads
+* 💾 User history & favorites
+* 🌍 Multilingual support
+* 🔎 More batik motif categories
+
+---
+
+## License 📜
+
+This project is licensed under the MIT License.
+
+---
+
+## Acknowledgements 🙏
+
+* Indonesian Batik Heritage
+* Machine Learning community
+* Open source contributors

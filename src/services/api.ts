@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// ✅ Gunakan import.meta.env untuk Vite
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // Create axios instance
