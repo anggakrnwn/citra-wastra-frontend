@@ -12,7 +12,9 @@ interface AuthResponse {
   message?: string;
 }
 
-export const WastraContextProvider = ({ children }: WastraContextProviderProps) => {
+export const WastraContextProvider = ({
+  children,
+}: WastraContextProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,10 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<AuthResponse> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<AuthResponse> => {
     try {
       const response = await authService.login(email, password);
       const { token, user } = response.data;
@@ -54,7 +59,11 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<AuthResponse> => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string
+  ): Promise<AuthResponse> => {
     try {
       const response = await authService.register(name, email, password);
       const { token, user } = response.data;
@@ -65,12 +74,23 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
         setUser(user);
         return { success: true };
       }
-      return { success: false, message: "Registration failed: no token received" };
+      return {
+        success: false,
+        message: "Registration failed: no token received",
+      };
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
+        const data = error.response?.data;
+        type BackendError = { field: string; message: string };
+        const detailedMessage = Array.isArray(data?.errors)
+          ? (data.errors as BackendError[])
+              .map((e) => `${e.field}: ${e.message}`)
+              .join(", ")
+          : data?.message;
+
         return {
           success: false,
-          message: error.response?.data?.message || "Registration failed",
+          message: detailedMessage || "Registration failed",
         };
       }
       return { success: false, message: "Registration failed" };
