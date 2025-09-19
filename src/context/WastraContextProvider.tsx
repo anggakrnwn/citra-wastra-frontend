@@ -80,6 +80,13 @@ export const WastraContextProvider = ({
       };
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
+        if (error.response?.status === 429) {
+          return {
+            success: false,
+            message: "Too many requests, please wait a moment",
+          };
+        }
+
         const data = error.response?.data;
         const detailedMessage = Array.isArray(data?.errors)
           ? (data.errors as { message: string }[])
