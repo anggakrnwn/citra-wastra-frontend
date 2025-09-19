@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useWastra } from "../context/WastraContext";
 import NavLinks from "./layouts/NavLinks";
 import wastralogo from "../assets/wastralogo.svg";
+import { toast } from "react-hot-toast";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useWastra();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const navigate = useNavigate();
 
   const UserAvatar = ({ name }: { name?: string }) => {
     const initial = name?.charAt(0).toUpperCase() || "U";
@@ -23,6 +25,8 @@ const Navbar: React.FC = () => {
     setLoggingOut(true);
     try {
       await logout();
+      toast.success("You have been logged out successfully");
+      setTimeout(() => navigate("/"), 1000);
     } finally {
       setLoggingOut(false);
       setShowConfirm(false);
@@ -144,16 +148,17 @@ const Navbar: React.FC = () => {
     {showConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-80">
-            <h3 className="text-lg font-semibold mb-2">Konfirmasi Logout</h3>
+            <h3 className="text-lg font-semibold mb-2">Confirm Logout</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Apakah kamu yakin ingin keluar dari akun?
+              Are you sure you want to log out{user?.name ? `, ${user.name}` : ""}?
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                disabled={loggingOut}
+                className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleConfirmLogout}
