@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import Home from "./pages/Home";
 import { WastraContextProvider } from "./context/WastraContextProvider";
 import GalleryPage from "./pages/MotifExplorer";
@@ -8,7 +9,14 @@ import AuthPage from "./pages/AuthPage";
 import MainLayout from "./components/layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DetectionWrapper from "./pages/DetectionWrapper"; 
+import { setAuthRedirectCallback } from "./services/api";
 function App() {
+  const navigate = useNavigate();
+
+    useEffect(() => {
+    setAuthRedirectCallback((path) => navigate(path));
+  }, [navigate]);
+
   return (
     <WastraContextProvider>
       <Routes>
