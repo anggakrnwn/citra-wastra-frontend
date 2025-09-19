@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useWastra } from "../context/WastraContext";
@@ -9,6 +8,7 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useWastra();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const UserAvatar = ({ name }: { name?: string }) => {
     const initial = name?.charAt(0).toUpperCase() || "U";
@@ -19,17 +19,19 @@ const Navbar: React.FC = () => {
     );
   };
 
-  const handleLogout = async () => {
+  const handleConfirmLogout = async () => {
     setLoggingOut(true);
     try {
       await logout();
     } finally {
       setLoggingOut(false);
+      setShowConfirm(false);
       setIsOpen(false);
     }
   };
 
   return (
+    <>
     <nav className="bg-white shadow-md fixed w-full top-0 left-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
@@ -50,7 +52,7 @@ const Navbar: React.FC = () => {
                 <span className="text-gray-700">{user.name || "User"}</span>
                 <UserAvatar name={user.name} />
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowConfirm(true)}
                   disabled={loggingOut}
                   className="bg-amber-600 text-white px-4 py-1 rounded hover:bg-amber-700"
                 >
@@ -117,7 +119,7 @@ const Navbar: React.FC = () => {
                   <UserAvatar name={user.name} />
                   <span className="text-gray-700">{user.name || "User"}</span>
                   <button
-                    onClick={handleLogout}
+                    onClick={() => setShowConfirm(true)}
                     disabled={loggingOut}
                     className="text-red-600 hover:text-red-800"
                   >
@@ -138,6 +140,33 @@ const Navbar: React.FC = () => {
         </div>
       )}
     </nav>
+
+    {showConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80">
+            <h3 className="text-lg font-semibold mb-2">Konfirmasi Logout</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Apakah kamu yakin ingin keluar dari akun?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmLogout}
+                disabled={loggingOut}
+                className="px-4 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+              >
+                {loggingOut ? "Logging out..." : "Logout"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
