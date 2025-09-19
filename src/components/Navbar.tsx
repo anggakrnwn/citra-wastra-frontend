@@ -158,7 +158,7 @@ const Navbar: React.FC = () => {
               <button
                 onClick={handleConfirmLogout}
                 disabled={loggingOut}
-                className="px-4 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                className="px-4 py-1 rounded bg-amber-600 text-white hover:bg-amber-700"
               >
                 {loggingOut ? "Logging out..." : "Logout"}
               </button>
