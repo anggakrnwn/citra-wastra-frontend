@@ -81,10 +81,9 @@ export const WastraContextProvider = ({
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         const data = error.response?.data;
-        type BackendError = { field: string; message: string };
         const detailedMessage = Array.isArray(data?.errors)
-          ? (data.errors as BackendError[])
-              .map((e) => `${e.field}: ${e.message}`)
+          ? (data.errors as { message: string }[])
+              .map((e) => e.message)
               .join(", ")
           : data?.message;
 
