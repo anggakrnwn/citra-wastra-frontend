@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
+import { X } from "lucide-react";
 
 interface TopPrediction {
   class: string;
@@ -145,9 +146,10 @@ const DetectionPage: React.FC = () => {
             )}
             <button
               onClick={resetImage}
-              className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-md text-sm shadow hover:bg-red-700 transition"
+              className="absolute top-3 right-3 bg-red-600/80 hover:bg-red-700 text-white p-2 rounded-full shadow-lg backdrop-blur-sm transition"
+              aria-label="Reset Image"
             >
-              Reset
+              <X size={18} />
             </button>
           </div>
         ) : (
