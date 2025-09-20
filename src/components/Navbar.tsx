@@ -128,7 +128,7 @@ const Navbar: React.FC = () => {
             {/* User section (mobile only) */}
             <div className="mt-4 pt-4 border-t">
               {user ? (
-                <div className="flex items-center justify-between bg-gray-50 rounded-xl p-3 shadow-sm">
+                <div className="flex flex-col bg-gray-50 rounded-xl p-3 shadow-sm gap-3">
                   <div className="flex items-center gap-3">
                     <UserAvatar name={user.name} />
                     <p className="font-semibold text-gray-800">{user.name}</p>
@@ -136,9 +136,9 @@ const Navbar: React.FC = () => {
                   <button
                     onClick={() => setShowConfirm(true)}
                     disabled={loggingOut}
-                    className="bg-amber-600 text-white px-4 py-1 rounded hover:bg-amber-700 text-sm"
+                    className="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 text-sm"
                   >
-                    {loggingOut ? "..." : "Logout"}
+                    {loggingOut ? "Logging out..." : "Logout"}
                   </button>
                 </div>
               ) : (
