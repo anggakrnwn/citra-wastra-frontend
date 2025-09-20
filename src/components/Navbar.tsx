@@ -112,37 +112,47 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white shadow-lg">
-          <div className="px-4 py-3 space-y-2">
-            <NavLinks mobile onClick={() => setIsOpen(false)} />
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-40 z-40 transform transition-all duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        onClick={() => setIsOpen(false)}
+      >
+        <div
+          className="absolute right-0 top-0 w-3/4 max-w-xs h-full bg-white shadow-xl rounded-l-2xl p-4 transform transition-transform duration-300"
+          onClick={(e) => e.stopPropagation()} 
+        >
+          {/* Menu items */}
+          <NavLinks mobile onClick={() => setIsOpen(false)} />
 
-            <div className="pt-3 border-t">
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <UserAvatar name={user.name} />
-                  <span className="text-gray-700">{user.name || "User"}</span>
+          <div className="mt-4 pt-4 border-t">
+            {user ? (
+              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
+                <UserAvatar name={user.name} />
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-800">{user.name}</p>
                   <button
                     onClick={() => setShowConfirm(true)}
                     disabled={loggingOut}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 text-sm hover:underline"
                   >
                     {loggingOut ? "Logging out..." : "Logout"}
                   </button>
                 </div>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="block bg-amber-600 text-white px-4 py-1 rounded text-center hover:bg-amber-700"
-                >
-                  Login
-                </Link>
-              )}
-            </div>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="block mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-center hover:bg-amber-700"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
-      )}
+      </div>
+
     </nav>
 
     {showConfirm && (
