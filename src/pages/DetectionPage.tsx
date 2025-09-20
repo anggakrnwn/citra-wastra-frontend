@@ -146,7 +146,7 @@ const DetectionPage: React.FC = () => {
             )}
             <button
               onClick={resetImage}
-              className="absolute top-3 right-3 bg-red-600/80 hover:bg-red-700 text-white p-2 rounded-full shadow-lg backdrop-blur-sm transition"
+              className="absolute top-3 right-3 bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-full shadow-lg backdrop-blur-sm transition"
               aria-label="Reset Image"
             >
               <X size={18} />
@@ -178,7 +178,7 @@ const DetectionPage: React.FC = () => {
             className={`px-6 py-3 rounded-lg text-white font-medium transition ${
               processing
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
+                : "bg-amber-600 hover:bg-amber-700"
             }`}
           >
             {processing ? "Processing..." : "Start Detection"}
