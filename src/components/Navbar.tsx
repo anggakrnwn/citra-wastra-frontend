@@ -49,11 +49,10 @@ const Navbar: React.FC = () => {
               <NavLinks mobile={false} />
             </div>
 
-            {/* User section (desktop only) */}
             <div className="hidden md:flex items-center gap-3">
               {user ? (
                 <>
-                  <span className="text-gray-700">{user.name || "User"}</span>
+                  <span className="text-gray-700">{user.name}</span>
                   <UserAvatar name={user.name} />
                   <button
                     onClick={() => setShowConfirm(true)}
@@ -73,40 +72,25 @@ const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* Hamburger button (mobile) */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden text-gray-700 hover:text-amber-600 focus:outline-none"
+              className="md:hidden relative w-8 h-8 flex flex-col justify-center items-center"
             >
-              {isOpen ? (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
+              <span
+                className={`block h-[2px] w-6 bg-gray-800 rounded transition-all duration-300 ${
+                  isOpen ? "rotate-45 translate-y-[7px]" : ""
+                }`}
+              />
+              <span
+                className={`block h-[2px] w-6 bg-gray-800 rounded my-[5px] transition-all duration-300 ${
+                  isOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`block h-[2px] w-6 bg-gray-800 rounded transition-all duration-300 ${
+                  isOpen ? "-rotate-45 -translate-y-[7px]" : ""
+                }`}
+              />
             </button>
           </div>
         </div>
@@ -122,10 +106,9 @@ const Navbar: React.FC = () => {
             className="absolute right-0 top-0 w-3/4 max-w-xs h-full bg-white shadow-xl rounded-l-2xl p-4 transform transition-transform duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Menu items */}
             <NavLinks mobile onClick={() => setIsOpen(false)} />
 
-            {/* User section (mobile only) */}
+            {/* User section (mobile) */}
             <div className="mt-4 pt-4 border-t">
               {user ? (
                 <div className="flex flex-col bg-gray-50 rounded-xl p-3 shadow-sm gap-3">
@@ -155,7 +138,6 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Confirm Logout Modal */}
       {showConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-80">
