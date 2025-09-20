@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
 
@@ -20,7 +20,7 @@ interface DetectionResponse {
 }
 
 const DetectionPage: React.FC = () => {
-  const { user, loading } = useContext(WastraContext)!;
+  const { user, loading } = useContext(WastraContext) ?? {};
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -30,6 +30,12 @@ const DetectionPage: React.FC = () => {
 
   const API_BASE_URL =
     import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   if (loading) {
     return <p className="text-center mt-6">Checking login status...</p>;
@@ -80,13 +86,17 @@ const DetectionPage: React.FC = () => {
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
       const json: DetectionResponse = await response.json();
+
       if (json.success && json.data) {
         setResult(json.data);
       } else {
         setError("Response backend tidak valid");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      console.error(err);
+      setError(
+        err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      );
     } finally {
       setProcessing(false);
     }
@@ -103,17 +113,41 @@ const DetectionPage: React.FC = () => {
 
       <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:border-orange-400 transition">
         {previewUrl ? (
-          <div>
+          <div className="relative">
             <img
               src={previewUrl}
               alt="Preview"
               className="mx-auto max-h-64 object-contain rounded-lg mb-4 shadow"
             />
+            {processing && (
+              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-lg">
+                <svg
+                  className="animate-spin h-10 w-10 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+              </div>
+            )}
             <button
               onClick={resetImage}
-              className="text-sm text-red-600 hover:underline mb-4"
+              className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-md text-sm shadow hover:bg-red-700 transition"
             >
-              Change image
+              Reset
             </button>
           </div>
         ) : (
