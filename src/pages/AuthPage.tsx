@@ -69,7 +69,10 @@ const AuthPage: React.FC = () => {
 
           {!isLogin && (
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Name
               </label>
               <input
@@ -87,7 +90,10 @@ const AuthPage: React.FC = () => {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email
             </label>
             <input
@@ -104,7 +110,10 @@ const AuthPage: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <div className="relative">
@@ -137,11 +146,44 @@ const AuthPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-md text-white font-medium 
-                       bg-amber-600 hover:bg-amber-700 
-                       disabled:opacity-50 transition-colors"
+            className="w-full py-3 px-4 rounded-lg text-white font-medium 
+             bg-amber-600 hover:bg-amber-700 
+             disabled:opacity-60 transition-colors flex justify-center items-center gap-2"
           >
-            {loading ? "Processing..." : isLogin ? "Sign in" : "Sign up"}
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+
+                <span className="flex gap-1">
+                  <span className="w-1 h-1 bg-white rounded-full animate-bounce delay-75"></span>
+                  <span className="w-1 h-1 bg-white rounded-full animate-bounce delay-150"></span>
+                  <span className="w-1 h-1 bg-white rounded-full animate-bounce delay-200"></span>
+                </span>
+              </>
+            ) : isLogin ? (
+              "Sign in"
+            ) : (
+              "Sign up"
+            )}
           </button>
 
           <div className="text-center text-sm text-gray-600">
