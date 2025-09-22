@@ -45,8 +45,8 @@ const Navbar: React.FC = () => {
             </Link>
 
             {/* Menu (desktop) */}
-            <div className="hidden md:flex space-x-6">
-              <NavLinks mobile={false} />
+            <div className="hidden md:flex space-x-6 items-center">
+              <NavLinks mobile={false} userRole={user?.role} />
             </div>
 
             <div className="hidden md:flex items-center gap-3">
@@ -106,7 +106,11 @@ const Navbar: React.FC = () => {
             className="absolute right-0 top-0 w-3/4 max-w-xs h-full bg-white shadow-xl rounded-l-2xl p-4 transform transition-transform duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <NavLinks mobile onClick={() => setIsOpen(false)} />
+            <NavLinks
+              mobile
+              onClick={() => setIsOpen(false)}
+              userRole={user?.role}
+            />
 
             {/* User section (mobile) */}
             <div className="mt-4 pt-4 border-t">

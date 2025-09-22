@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // Create axios instance
 const api = axios.create({
@@ -51,7 +50,7 @@ api.interceptors.response.use(
 // Prediction services
 export const predictionService = {
   predict: (formData: FormData) => {
-    return api.post("/predict", formData, {
+    return api.post("/api/predict", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -59,18 +58,64 @@ export const predictionService = {
   },
 
   getHistory: () => {
-    return api.get("/predict/history");
+    return api.get("/api/predict/history");
   },
 };
 
 // Auth services
 export const authService = {
   login: (email: string, password: string) => {
-    return api.post("/auth/login", { email, password });
+    return api.post("/api/auth/login", { email, password });
   },
 
   register: (name: string, email: string, password: string) => {
-    return api.post("/auth/register", { name, email, password });
+    return api.post("/api/auth/register", { name, email, password });
+  },
+};
+
+export const motifService = {
+  getAll: () => {
+    return api.get("/api/motifs");
+  },
+
+  create: (formData: FormData) => {
+    return api.post("/api/motifs", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  update: (id: string, formData: FormData) => {
+    return api.put(`/api/motifs/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  delete: (id: string) => {
+    return api.delete(`/api/motifs/${id}`);
+  },
+};
+
+export const userService = {
+  getAll: () => {
+    return api.get("/api/users");
+  },
+
+  updateRole: (id: string, role: string) => {
+    return api.patch(`/api/users/${id}/role`, { role });
+  },
+};
+
+export const uploadService = {
+  upload: (formData: FormData) => {
+    return api.post("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   },
 };
 

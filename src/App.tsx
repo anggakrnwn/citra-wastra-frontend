@@ -8,12 +8,15 @@ import WastraQuiz from "./pages/WastraQuiz";
 import AuthPage from "./pages/AuthPage";
 import MainLayout from "./components/layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import DetectionWrapper from "./pages/DetectionWrapper"; 
+import DetectionWrapper from "./pages/DetectionWrapper";
 import { setAuthRedirectCallback } from "./services/api";
+import AdminMotif from "./pages/AdminMotif";
+import AdminUsers from "./pages/AdminUsers";
+import ForbiddenPage from "./pages/ForbiddenPage";
 function App() {
   const navigate = useNavigate();
 
-    useEffect(() => {
+  useEffect(() => {
     setAuthRedirectCallback((path) => navigate(path));
   }, [navigate]);
 
@@ -44,6 +47,26 @@ function App() {
             }
           />
         </Route>
+
+        <Route
+          path="/admin/motifs"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminMotif />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/forbidden" element={<ForbiddenPage />} />
 
         <Route path="/login" element={<AuthPage />} />
       </Routes>

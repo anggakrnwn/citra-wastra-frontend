@@ -12,39 +12,38 @@ interface AuthResponse {
   message?: string;
 }
 
-export const WastraContextProvider = ({
-  children,
-}: WastraContextProviderProps) => {
+export const WastraContextProvider = ({ children }: WastraContextProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (token && userData) {
+    const savedUser = localStorage.getItem("user");
+    if (token && savedUser) {
       try {
-        setUser(JSON.parse(userData));
+        const parsed = JSON.parse(savedUser);
+        if (!parsed.role) parsed.role = "user";
+        setUser(parsed);
       } catch {
         localStorage.removeItem("user");
         setUser(null);
       }
     }
     setLoading(false);
-  }, []);
+  }, [token]);
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<AuthResponse> => {
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await authService.login(email, password);
-      const { token, user } = response.data;
+      const { token: newToken, user } = response.data;
 
-      if (token && user) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        setUser(user);
+      if (newToken && user) {
+        const userWithRole = { ...user, role: user.role ?? "user" };
+        localStorage.setItem("token", newToken);
+        localStorage.setItem("user", JSON.stringify(userWithRole));
+
+        setToken(newToken);
+        setUser(userWithRole);
         return { success: true };
       }
       return { success: false, message: "Login failed: no token received" };
@@ -59,45 +58,32 @@ export const WastraContextProvider = ({
     }
   };
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string
-  ): Promise<AuthResponse> => {
+  const register = async (name: string, email: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await authService.register(name, email, password);
-      const { token, user } = response.data;
+      const { token: newToken, user } = response.data;
 
-      if (token && user) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        setUser(user);
+      if (newToken && user) {
+        const userWithRole = { ...user, role: user.role ?? "user" };
+        localStorage.setItem("token", newToken);
+        localStorage.setItem("user", JSON.stringify(userWithRole));
+
+        setToken(newToken);
+        setUser(userWithRole);
         return { success: true };
       }
-      return {
-        success: false,
-        message: "Registration failed: no token received",
-      };
+      return { success: false, message: "Registration failed: no token received" };
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         if (error.response?.status === 429) {
-          return {
-            success: false,
-            message: "Too many requests, please wait a moment",
-          };
+          return { success: false, message: "Too many requests, please wait a moment" };
         }
-
         const data = error.response?.data;
         const detailedMessage = Array.isArray(data?.errors)
-          ? (data.errors as { message: string }[])
-              .map((e) => e.message)
-              .join(", ")
+          ? (data.errors as { message: string }[]).map((e) => e.message).join(", ")
           : data?.message;
 
-        return {
-          success: false,
-          message: detailedMessage || "Registration failed",
-        };
+        return { success: false, message: detailedMessage || "Registration failed" };
       }
       return { success: false, message: "Registration failed" };
     }
@@ -106,11 +92,12 @@ export const WastraContextProvider = ({
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    setToken(null);
     setUser(null);
   };
 
   return (
-    <WastraContext.Provider value={{ user, loading, login, register, logout }}>
+    <WastraContext.Provider value={{ user, loading, token, login, register, logout }}>
       {children}
     </WastraContext.Provider>
   );
