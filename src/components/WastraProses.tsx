@@ -68,7 +68,7 @@ const WastraProses: React.FC = () => {
                     <span className="text-lg">{isActive ? "−" : "+"}</span>
                   </button>
                   {isActive && (
-                    <p className="mt-3 text-body text-gray-600">{item.desc}</p>
+                    <p className="px-4 pb-4 text-body text-gray-600">{item.desc}</p>
                   )}
                 </div>
               );
