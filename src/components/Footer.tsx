@@ -71,7 +71,7 @@ const Footer: React.FC = () => {
                 href="tel:+621234567890"
                 className="hover:text-white transition"
               >
-                +62 858-6567-3578
+                +62 812-2724-5907
               </a>
             </li>
             <li>Location: Purwokerto, Indonesia</li>
