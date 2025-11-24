@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
 import { X } from "lucide-react";
+import { predictionService } from "../services/api";
 
 interface TopPrediction {
   class: string;
@@ -28,9 +29,6 @@ const DetectionPage: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<DetectionData | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
   useEffect(() => {
     return () => {
@@ -78,15 +76,8 @@ const DetectionPage: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Kamu harus login terlebih dahulu!");
 
-      const response = await fetch(`${API_BASE_URL}/predict`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-      const json: DetectionResponse = await response.json();
+      const response = await predictionService.predict(formData);
+      const json: DetectionResponse = response.data;
 
       if (json.success && json.data) {
         setResult(json.data);
@@ -95,9 +86,18 @@ const DetectionPage: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
-      );
+      if (err instanceof Error && err.message) {
+        setError(err.message);
+      } else if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosError = err as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 404) {
+          setError("Endpoint tidak ditemukan. Pastikan backend sudah running dan URL API benar.");
+        } else {
+          setError(axiosError.response?.data?.message || `Server error: ${axiosError.response?.status || 'Unknown'}`);
+        }
+      } else {
+        setError("Terjadi kesalahan tak terduga");
+      }
     } finally {
       setProcessing(false);
     }
