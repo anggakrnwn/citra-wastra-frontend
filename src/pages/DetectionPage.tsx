@@ -96,11 +96,19 @@ const DetectionPage: React.FC = () => {
               message?: string; 
               error?: string;
               hint?: string;
+              code?: string;
             } 
           } 
         };
         const status = axiosError.response?.status;
         const responseData = axiosError.response?.data;
+        
+        // Log full error untuk debugging
+        console.error("Full error response:", {
+          status,
+          data: responseData,
+          fullResponse: axiosError.response,
+        });
         
         if (status === 404) {
           setError("Endpoint tidak ditemukan. Pastikan backend sudah running dan URL API benar.");
@@ -109,7 +117,14 @@ const DetectionPage: React.FC = () => {
           const errorMsg = responseData?.message || "ML service sedang tidak tersedia";
           const errorDetail = responseData?.error || "";
           const hint = responseData?.hint || "";
-          setError(`${errorMsg}${errorDetail ? `. Detail: ${errorDetail}` : ""}${hint ? `. ${hint}` : ""}`);
+          const code = responseData?.code || "";
+          
+          let fullError = errorMsg;
+          if (errorDetail) fullError += `. Detail: ${errorDetail}`;
+          if (code) fullError += ` (Code: ${code})`;
+          if (hint) fullError += `. ${hint}`;
+          
+          setError(fullError);
         } else if (status === 504) {
           setError("Request timeout. ML service terlalu lama merespons. Coba lagi nanti.");
         } else if (responseData?.message) {
