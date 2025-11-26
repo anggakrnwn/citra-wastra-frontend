@@ -72,6 +72,10 @@ export const authService = {
   register: (name: string, email: string, password: string) => {
     return api.post("/api/auth/register", { name, email, password });
   },
+
+  googleAuth: (idToken: string, name: string, email: string, photoURL?: string) => {
+    return api.post("/api/auth/google", { idToken, name, email, photoURL });
+  },
 };
 
 export const motifService = {

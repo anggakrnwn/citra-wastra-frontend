@@ -89,6 +89,112 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
     }
   };
 
+  const loginWithGoogle = async (): Promise<AuthResponse> => {
+    return new Promise((resolve) => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      
+      if (!clientId) {
+        resolve({ success: false, message: "Google Client ID not configured" });
+        return;
+      }
+
+      // Load Google Identity Services script
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        if (window.google) {
+          const client = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'email profile',
+            callback: async (tokenResponse: any) => {
+              try {
+                if (!tokenResponse?.access_token) {
+                  resolve({ success: false, message: "Failed to get access token from Google" });
+                  return;
+                }
+
+                const userInfoResponse = await fetch(
+                  `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`
+                );
+                
+                if (!userInfoResponse.ok) {
+                  resolve({ 
+                    success: false, 
+                    message: `Failed to get user info from Google: ${userInfoResponse.status}` 
+                  });
+                  return;
+                }
+                
+                const userInfo = await userInfoResponse.json();
+                
+                if (!userInfo.email) {
+                  resolve({ success: false, message: "Email not provided by Google" });
+                  return;
+                }
+                
+                const apiResponse = await authService.googleAuth(
+                  tokenResponse.access_token,
+                  userInfo.name || "",
+                  userInfo.email || "",
+                  userInfo.picture || undefined
+                );
+                
+                const { token: newToken, user: backendUser } = apiResponse.data;
+
+                if (newToken && backendUser) {
+                  const userWithRole = { ...backendUser, role: backendUser.role ?? "user" };
+                  localStorage.setItem("token", newToken);
+                  localStorage.setItem("user", JSON.stringify(userWithRole));
+
+                  setToken(newToken);
+                  setUser(userWithRole);
+                  resolve({ success: true });
+                } else {
+                  resolve({ success: false, message: "Google login failed: no token received" });
+                }
+              } catch (error: unknown) {
+                if (error instanceof AxiosError) {
+                  resolve({
+                    success: false,
+                    message: error.response?.data?.message || error.message || "Google login failed",
+                  });
+                } else if (error instanceof Error) {
+                  resolve({ success: false, message: error.message });
+                } else {
+                  resolve({ success: false, message: "Google login failed" });
+                }
+              }
+            },
+          });
+          
+          try {
+            client.requestAccessToken();
+          } catch (error: any) {
+            resolve({ success: false, message: `Failed to request access token: ${error.message}` });
+          }
+        } else {
+          resolve({ success: false, message: "Failed to load Google Sign-In library" });
+        }
+      };
+      
+      script.onerror = () => {
+        resolve({ success: false, message: "Failed to load Google Sign-In script. Check your internet connection." });
+      };
+      
+      // Check if script already exists
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (!existingScript) {
+        document.head.appendChild(script);
+      } else {
+        // Script already loaded, initialize directly
+        script.onload();
+      }
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -97,7 +203,7 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
   };
 
   return (
-    <WastraContext.Provider value={{ user, loading, token, login, register, logout }}>
+    <WastraContext.Provider value={{ user, loading, token, login, register, loginWithGoogle, logout }}>
       {children}
     </WastraContext.Provider>
   );
