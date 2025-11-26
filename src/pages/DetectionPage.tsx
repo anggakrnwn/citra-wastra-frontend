@@ -87,50 +87,33 @@ const DetectionPage: React.FC = () => {
     } catch (err: unknown) {
       console.error("Prediction error:", err);
       if (err instanceof Error && err.message) {
-        setError(err.message);
+        // Handle timeout errors
+        if (err.message.includes("timeout") || err.message.includes("504")) {
+          setError("Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil atau tunggu beberapa saat.");
+        } else {
+          setError(err.message);
+        }
       } else if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as { 
           response?: { 
             status?: number; 
             data?: { 
-              message?: string; 
-              error?: string;
-              hint?: string;
-              code?: string;
+              message?: string;
+              suggestion?: string;
             } 
-          } 
+          };
+          code?: string;
+          message?: string;
         };
-        const status = axiosError.response?.status;
-        const responseData = axiosError.response?.data;
         
-        // Log full error untuk debugging
-        console.error("Full error response:", {
-          status,
-          data: responseData,
-          fullResponse: axiosError.response,
-        });
-        
-        if (status === 404) {
+        if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
+          setError("Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil.");
+        } else if (axiosError.response?.status === 504) {
+          setError(axiosError.response?.data?.message || "Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil.");
+        } else if (axiosError.response?.status === 404) {
           setError("Endpoint tidak ditemukan. Pastikan backend sudah running dan URL API benar.");
-        } else if (status === 503) {
-          // Service Unavailable - biasanya masalah dengan ML service
-          const errorMsg = responseData?.message || "ML service sedang tidak tersedia";
-          const errorDetail = responseData?.error || "";
-          const hint = responseData?.hint || "";
-          const code = responseData?.code || "";
-          
-          let fullError = errorMsg;
-          if (errorDetail) fullError += `. Detail: ${errorDetail}`;
-          if (code) fullError += ` (Code: ${code})`;
-          if (hint) fullError += `. ${hint}`;
-          
-          setError(fullError);
-        } else if (status === 504) {
-          setError("Request timeout. ML service terlalu lama merespons. Coba lagi nanti.");
-        } else if (responseData?.message) {
-          setError(responseData.message + (responseData.error ? `. ${responseData.error}` : ""));
         } else {
-          setError(`Server error: ${status || 'Unknown'}. Silakan coba lagi nanti.`);
+          setError(axiosError.response?.data?.message || `Server error: ${axiosError.response?.status || 'Unknown'}`);
         }
       } else {
         setError("Terjadi kesalahan tak terduga");

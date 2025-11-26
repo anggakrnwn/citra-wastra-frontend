@@ -54,6 +54,7 @@ export const predictionService = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 90000, // 90 seconds timeout for prediction (longer than backend timeout)
     });
   },
 
