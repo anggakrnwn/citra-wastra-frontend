@@ -98,13 +98,8 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
         return;
       }
 
-      // Load Google Identity Services script
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
+      // Initialize Google OAuth client
+      const initializeGoogleAuth = () => {
         if (window.google) {
           const client = window.google.accounts.oauth2.initTokenClient({
             client_id: clientId,
@@ -179,19 +174,30 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
           resolve({ success: false, message: "Failed to load Google Sign-In library" });
         }
       };
+
+      // Check if script already exists
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existingScript && window.google) {
+        // Script already loaded, initialize directly
+        initializeGoogleAuth();
+        return;
+      }
+
+      // Load Google Identity Services script
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        initializeGoogleAuth();
+      };
       
       script.onerror = () => {
         resolve({ success: false, message: "Failed to load Google Sign-In script. Check your internet connection." });
       };
       
-      // Check if script already exists
-      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      if (!existingScript) {
-        document.head.appendChild(script);
-      } else {
-        // Script already loaded, initialize directly
-        script.onload();
-      }
+      document.head.appendChild(script);
     });
   };
 

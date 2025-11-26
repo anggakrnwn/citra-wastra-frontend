@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useWastra } from "../context/WastraContext";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
-// Extend Window interface for Google types
 declare global {
   interface Window {
     google?: any;
