@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { predictionService } from "../services/api";
 
 interface TopPrediction {
-  class: string;
+  class_name: string;
   confidence: number;
 }
 
@@ -233,7 +233,7 @@ const DetectionPage: React.FC = () => {
                     key={i}
                     className="flex justify-between items-center bg-gray-50 px-4 py-2 rounded-lg shadow-sm"
                   >
-                    <span className="font-medium text-gray-800">{p.class}</span>
+                    <span className="font-medium text-gray-800">{p.class_name}</span>
                     <span className="text-sm text-gray-600">
                       {(p.confidence * 100).toFixed(2)}%
                     </span>
