@@ -50,7 +50,7 @@ api.interceptors.response.use(
 const retryRequest = async <T>(
   requestFn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 5000,
+  baseDelay: number = 10000,
   onRetry?: (attempt: number, delay: number) => void
 ): Promise<T> => {
   let lastError: any;
@@ -63,9 +63,12 @@ const retryRequest = async <T>(
       
       const shouldRetry = 
         error.response?.status === 503 ||
+        error.response?.status === 504 ||
         error.code === "ECONNREFUSED" ||
         error.code === "ETIMEDOUT" ||
-        error.message?.includes("Network Error");
+        error.code === "ECONNABORTED" ||
+        error.message?.includes("Network Error") ||
+        error.message?.includes("timeout");
       
       if (!shouldRetry || attempt === maxRetries) {
         throw error;
@@ -93,10 +96,10 @@ export const predictionService = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        timeout: 90000,
+        timeout: 120000,
       }),
       retries,
-      5000,
+      10000,
       onRetry
     );
   },

@@ -115,11 +115,9 @@ const DetectionPage: React.FC = () => {
         };
         
         if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
-          setError("Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil.");
-        } else if (axiosError.response?.status === 503) {
-          setError("Service sedang memulai. Silakan coba lagi dalam beberapa detik.");
-        } else if (axiosError.response?.status === 504) {
-          setError(axiosError.response?.data?.message || "Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil.");
+          setError("Prediksi memakan waktu terlalu lama setelah beberapa percobaan. Service mungkin sedang dalam proses wake-up. Silakan coba lagi dalam beberapa saat.");
+        } else if (axiosError.response?.status === 503 || axiosError.response?.status === 504) {
+          setError("Service sedang memulai. Semua percobaan telah dilakukan. Silakan coba lagi dalam beberapa detik.");
         } else if (axiosError.response?.status === 404) {
           setError("Endpoint tidak ditemukan. Pastikan backend sudah running dan URL API benar.");
         } else {
