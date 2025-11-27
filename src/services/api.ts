@@ -47,19 +47,72 @@ api.interceptors.response.use(
   }
 );
 
+const retryRequest = async <T>(
+  requestFn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 5000,
+  onRetry?: (attempt: number, delay: number) => void
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await requestFn();
+    } catch (error: any) {
+      lastError = error;
+      
+      const shouldRetry = 
+        error.response?.status === 503 ||
+        error.code === "ECONNREFUSED" ||
+        error.code === "ETIMEDOUT" ||
+        error.message?.includes("Network Error");
+      
+      if (!shouldRetry || attempt === maxRetries) {
+        throw error;
+      }
+      
+      const delay = baseDelay + (attempt * 5000);
+      console.log(`Service sedang memulai (attempt ${attempt + 1}/${maxRetries + 1}), menunggu ${delay/1000} detik...`);
+      
+      if (onRetry) {
+        onRetry(attempt + 1, delay);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
 // Prediction services
 export const predictionService = {
-  predict: (formData: FormData) => {
-    return api.post("/api/predict", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-      timeout: 90000, // 90 seconds timeout for prediction (longer than backend timeout)
-    });
+  predict: async (formData: FormData, retries: number = 3, onRetry?: (attempt: number, delay: number) => void) => {
+    return retryRequest(
+      () => api.post("/api/predict", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 90000,
+      }),
+      retries,
+      5000,
+      onRetry
+    );
   },
 
   getHistory: () => {
     return api.get("/api/predict/history");
+  },
+
+  warmUp: async () => {
+    try {
+      await api.get("/api/predict/history", {
+        timeout: 5000,
+      });
+    } catch (error) {
+      console.log("Warm-up request completed (errors are expected)");
+    }
   },
 };
 

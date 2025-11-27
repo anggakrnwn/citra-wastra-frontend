@@ -29,6 +29,7 @@ const DetectionPage: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<DetectionData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -68,6 +69,7 @@ const DetectionPage: React.FC = () => {
 
     setProcessing(true);
     setError(null);
+    setRetryMessage(null);
 
     const formData = new FormData();
     formData.append("image", selectedImage);
@@ -76,16 +78,22 @@ const DetectionPage: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Kamu harus login terlebih dahulu!");
 
-      const response = await predictionService.predict(formData);
+      const onRetry = (attempt: number, delay: number) => {
+        setRetryMessage(`Service sedang memulai (percobaan ${attempt}/3). Menunggu ${delay/1000} detik...`);
+      };
+      const response = await predictionService.predict(formData, 3, onRetry);
       const json: DetectionResponse = response.data;
 
       if (json.success && json.data) {
         setResult(json.data);
+        setRetryMessage(null);
       } else {
         setError("Response backend tidak valid");
       }
     } catch (err: unknown) {
       console.error("Prediction error:", err);
+      setRetryMessage(null);
+
       if (err instanceof Error && err.message) {
         // Handle timeout errors
         if (err.message.includes("timeout") || err.message.includes("504")) {
@@ -108,6 +116,8 @@ const DetectionPage: React.FC = () => {
         
         if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
           setError("Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil.");
+        } else if (axiosError.response?.status === 503) {
+          setError("Service sedang memulai. Silakan coba lagi dalam beberapa detik.");
         } else if (axiosError.response?.status === 504) {
           setError(axiosError.response?.data?.message || "Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil.");
         } else if (axiosError.response?.status === 404) {
@@ -206,6 +216,12 @@ const DetectionPage: React.FC = () => {
         </div>
       )}
 
+      {retryMessage && (
+        <p className="mt-4 text-center text-amber-600 font-medium animate-pulse">
+          {retryMessage}
+        </p>
+      )}
+      
       {error && (
         <p className="mt-4 text-center text-red-500 font-semibold">{error}</p>
       )}
