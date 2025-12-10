@@ -4,3 +4,4 @@ const BASE_URL = API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}
 
 export const API_URL = `${BASE_URL}/motifs`;
 export const UPLOAD_URL = `${BASE_URL}/upload`;
+export const WILAYAH_API_URL = `${BASE_URL}/wilayah`;
