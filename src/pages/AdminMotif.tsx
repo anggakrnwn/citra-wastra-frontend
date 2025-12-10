@@ -1,20 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { API_URL, UPLOAD_URL } from "../../config";
-
-type Island =
-  | "Sumatra"
-  | "Jawa"
-  | "Kalimantan"
-  | "Sulawesi"
-  | "Bali"
-  | "Nusa Tenggara"
-  | "Papua"
-  | "Maluku";
+import { API_URL, UPLOAD_URL, WILAYAH_API_URL } from "../../config";
 
 interface MotifItem {
   id: string;
   name: string;
-  region: Island;
+  region: string;
   province: string;
   image: string;
   description: string;
@@ -22,16 +12,16 @@ interface MotifItem {
   createdAt: string;
 }
 
-const ISLAND_OPTIONS: Island[] = [
-  "Sumatra",
-  "Jawa",
-  "Kalimantan",
-  "Sulawesi",
-  "Bali",
-  "Nusa Tenggara",
-  "Papua",
-  "Maluku",
-];
+interface Province {
+  id: string;
+  name: string;
+}
+
+interface Regency {
+  id: string;
+  province_id: string;
+  name: string;
+}
 
 
 const getAuthHeaders = (): HeadersInit => {
@@ -46,7 +36,7 @@ const AdminMotif: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<Omit<MotifItem, "id" | "createdAt">>({
     name: "",
-    region: "Jawa",
+    region: "",
     province: "",
     image: "",
     description: "",
@@ -54,6 +44,91 @@ const AdminMotif: React.FC = () => {
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  
+  // Wilayah Indonesia states
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [regencies, setRegencies] = useState<Regency[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState<string>("");
+  const [selectedRegencyId, setSelectedRegencyId] = useState<string>("");
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingRegencies, setLoadingRegencies] = useState(false);
+
+  // Fetch provinces on mount
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLoadingProvinces(true);
+      try {
+        console.log("Fetching provinces from:", `${WILAYAH_API_URL}/provinces`);
+        const res = await fetch(`${WILAYAH_API_URL}/provinces`);
+        console.log("Provinces response status:", res.status, res.statusText);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Gagal mengambil data provinsi: ${res.status} ${res.statusText}`);
+        }
+        
+        const data: Province[] = await res.json();
+        console.log("Provinces data received:", data.length, "provinces");
+        setProvinces(data);
+      } catch (err) {
+        console.error("Error fetching provinces:", err);
+        alert(`Error: ${err instanceof Error ? err.message : "Gagal mengambil data provinsi"}`);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // Fetch regencies when province is selected
+  useEffect(() => {
+    if (!selectedProvinceId) {
+      setRegencies([]);
+      setSelectedRegencyId("");
+      return;
+    }
+
+    const fetchRegencies = async () => {
+      setLoadingRegencies(true);
+      try {
+        console.log("Fetching regencies from:", `${WILAYAH_API_URL}/regencies/${selectedProvinceId}`);
+        const res = await fetch(`${WILAYAH_API_URL}/regencies/${selectedProvinceId}`);
+        console.log("Regencies response status:", res.status, res.statusText);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Gagal mengambil data kota/kabupaten: ${res.status} ${res.statusText}`);
+        }
+        
+        const data: Regency[] = await res.json();
+        console.log("Regencies data received:", data.length, "regencies");
+        setRegencies(data);
+        setSelectedRegencyId(""); // Reset regency selection
+      } catch (err) {
+        console.error("Error fetching regencies:", err);
+        alert(`Error: ${err instanceof Error ? err.message : "Gagal mengambil data kota/kabupaten"}`);
+      } finally {
+        setLoadingRegencies(false);
+      }
+    };
+    fetchRegencies();
+  }, [selectedProvinceId]);
+
+  // Update form.province when regency is selected
+  useEffect(() => {
+    if (selectedRegencyId && regencies.length > 0) {
+      const selectedRegency = regencies.find(r => r.id === selectedRegencyId);
+      if (selectedRegency) {
+        const selectedProvince = provinces.find(p => p.id === selectedProvinceId);
+        setForm(prev => ({ 
+          ...prev, 
+          province: selectedRegency.name + (selectedProvince ? `, ${selectedProvince.name}` : "")
+        }));
+      }
+    }
+  }, [selectedRegencyId, regencies, selectedProvinceId, provinces]);
 
   useEffect(() => {
     const fetchMotifs = async () => {
@@ -78,12 +153,15 @@ const AdminMotif: React.FC = () => {
     setEditing(null);
     setForm({
       name: "",
-      region: "Jawa",
+      region: "",
       province: "",
       image: "",
       description: "",
       tags: [],
     });
+    setSelectedProvinceId("");
+    setSelectedRegencyId("");
+    setRegencies([]);
   };
 
   const handleFileUpload = async (file: File) => {
@@ -166,7 +244,7 @@ const AdminMotif: React.FC = () => {
     }
   };
 
-  const handleEdit = (item: MotifItem) => {
+  const handleEdit = async (item: MotifItem) => {
     setEditing(item);
     setForm({
       name: item.name,
@@ -176,6 +254,32 @@ const AdminMotif: React.FC = () => {
       description: item.description,
       tags: item.tags,
     });
+    
+    // Try to extract province and regency from existing province string
+    // Format: "KOTA/KABUPATEN, PROVINSI"
+    const parts = item.province.split(", ");
+    if (parts.length === 2) {
+      const regencyName = parts[0];
+      const provinceName = parts[1];
+      const province = provinces.find(p => p.name === provinceName);
+      if (province) {
+        setSelectedProvinceId(province.id);
+        // Fetch regencies first, then find the regency
+        try {
+          const res = await fetch(`${WILAYAH_API_URL}/regencies/${province.id}`);
+          if (res.ok) {
+            const regenciesData: Regency[] = await res.json();
+            setRegencies(regenciesData);
+            const regency = regenciesData.find(r => r.name === regencyName);
+            if (regency) {
+              setSelectedRegencyId(regency.id);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching regencies for edit:", err);
+        }
+      }
+    }
   };
 
   return (
@@ -199,25 +303,49 @@ const AdminMotif: React.FC = () => {
             required
             className="border rounded-lg px-3 py-2"
           />
-          <select
-            value={form.region}
-            onChange={(e) =>
-              setForm({ ...form, region: e.target.value as Island })
-            }
-            className="border rounded-lg px-3 py-2"
-          >
-            {ISLAND_OPTIONS.map((opt) => (
-              <option key={opt}>{opt}</option>
-            ))}
-          </select>
           <input
             type="text"
-            placeholder="Provinsi"
-            value={form.province}
-            onChange={(e) => setForm({ ...form, province: e.target.value })}
-            required
+            placeholder="Daerah/Pulau (opsional)"
+            value={form.region}
+            onChange={(e) => setForm({ ...form, region: e.target.value })}
             className="border rounded-lg px-3 py-2"
           />
+          <select
+            value={selectedProvinceId}
+            onChange={(e) => setSelectedProvinceId(e.target.value)}
+            required
+            disabled={loadingProvinces}
+            className="border rounded-lg px-3 py-2"
+          >
+            <option value="">
+              {loadingProvinces ? "Memuat provinsi..." : "Pilih Provinsi"}
+            </option>
+            {provinces.map((province) => (
+              <option key={province.id} value={province.id}>
+                {province.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedRegencyId}
+            onChange={(e) => setSelectedRegencyId(e.target.value)}
+            required
+            disabled={!selectedProvinceId || loadingRegencies}
+            className="border rounded-lg px-3 py-2"
+          >
+            <option value="">
+              {!selectedProvinceId 
+                ? "Pilih provinsi terlebih dahulu" 
+                : loadingRegencies 
+                ? "Memuat kota/kabupaten..." 
+                : "Pilih Kota/Kabupaten"}
+            </option>
+            {regencies.map((regency) => (
+              <option key={regency.id} value={regency.id}>
+                {regency.name}
+              </option>
+            ))}
+          </select>
           <input
             type="file"
             accept="image/*"
