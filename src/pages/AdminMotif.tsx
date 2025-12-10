@@ -118,15 +118,21 @@ const AdminMotif: React.FC = () => {
 
   // Update form.province when regency is selected
   useEffect(() => {
-    if (selectedRegencyId && regencies.length > 0) {
+    if (selectedRegencyId && regencies.length > 0 && selectedProvinceId) {
       const selectedRegency = regencies.find(r => r.id === selectedRegencyId);
-      if (selectedRegency) {
-        const selectedProvince = provinces.find(p => p.id === selectedProvinceId);
+      const selectedProvince = provinces.find(p => p.id === selectedProvinceId);
+      
+      if (selectedRegency && selectedProvince) {
+        const provinceValue = `${selectedRegency.name}, ${selectedProvince.name}`;
         setForm(prev => ({ 
           ...prev, 
-          province: selectedRegency.name + (selectedProvince ? `, ${selectedProvince.name}` : "")
+          province: provinceValue
         }));
+        console.log("Province updated:", provinceValue);
       }
+    } else if (!selectedRegencyId && selectedProvinceId) {
+      // Reset province if regency is cleared but province is still selected
+      setForm(prev => ({ ...prev, province: "" }));
     }
   }, [selectedRegencyId, regencies, selectedProvinceId, provinces]);
 
@@ -190,7 +196,20 @@ const AdminMotif: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validasi sebelum submit
+      if (!form.province) {
+        alert("Silakan pilih provinsi dan kota/kabupaten terlebih dahulu");
+        return;
+      }
+
+      if (!form.image) {
+        alert("Silakan upload gambar terlebih dahulu");
+        return;
+      }
+
       const payload = { ...form };
+      console.log("Submitting payload:", payload);
+      
       const res = await fetch(
         editing ? `${API_URL}/${editing.id}` : API_URL,
         {
@@ -203,21 +222,34 @@ const AdminMotif: React.FC = () => {
         }
       );
 
-      if (!res.ok) throw new Error("Gagal menyimpan motif");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ 
+          error: "Gagal menyimpan motif",
+          message: `Error ${res.status}: ${res.statusText}`
+        }));
+        
+        console.error("Error response:", errorData);
+        throw new Error(errorData.error || errorData.message || "Gagal menyimpan motif");
+      }
+      
       const saved = await res.json();
+      console.log("Motif saved successfully:", saved);
 
       if (editing) {
         setMotifs((prev) =>
           prev.map((m) => (m.id === editing.id ? saved : m))
         );
+        alert("Motif berhasil diupdate");
       } else {
         setMotifs((prev) => [...prev, saved]);
+        alert("Motif berhasil ditambahkan");
       }
 
       resetForm();
     } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan saat menyimpan data.");
+      console.error("Submit error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan data.";
+      alert(errorMessage);
     }
   };
 
