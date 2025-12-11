@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { userService } from "@/services/api";
 
 interface User {
   id: string;
@@ -31,14 +32,10 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
-  const token = localStorage.getItem("token");
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await userService.getAll();
 
       const data = Array.isArray(res.data)
         ? res.data
@@ -52,16 +49,12 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const updateRole = async (id: string, role: "user" | "admin") => {
     setUpdating(id);
     try {
-      await axios.patch(
-        `/api/users/${id}/role`,
-        { role },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await userService.updateRole(id, role);
 
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, role } : u))
