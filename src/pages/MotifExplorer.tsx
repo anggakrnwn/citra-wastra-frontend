@@ -1,19 +1,19 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { X, Search } from "lucide-react";
-import type { Island, MotifItem } from "../assets/data/dataset";
-import { useWastra } from "../context/WastraContext";
-import { API_URL } from "../../config";
+import type { MotifItem } from "../assets/data/dataset";
+import { motifService } from "../services/api";
+import { WILAYAH_API_URL } from "../../config";
 
-const ISLAND_OPTIONS: Island[] = [
-  "Sumatra",
-  "Jawa",
-  "Kalimantan",
-  "Sulawesi",
-  "Bali",
-  "Nusa Tenggara",
-  "Papua",
-  "Maluku",
-];
+interface Province {
+  id: string;
+  name: string;
+}
+
+interface Regency {
+  id: string;
+  province_id: string;
+  name: string;
+}
 
 
 const Badge = ({ children }: { children: React.ReactNode }) => (
@@ -58,42 +58,110 @@ const DetailModal = ({
 };
 
 const MotifExplorer: React.FC = () => {
-  const { token } = useWastra();
   const [motifs, setMotifs] = useState<MotifItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [island, setIsland] = useState<Island | "">("");
-  const [province, setProvince] = useState("");
+  const [selectedProvinceId, setSelectedProvinceId] = useState<string>("");
+  const [selectedRegencyId, setSelectedRegencyId] = useState<string>("");
   const [detail, setDetail] = useState<MotifItem | null>(null);
+  
+  // Wilayah Indonesia states
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [regencies, setRegencies] = useState<Regency[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingRegencies, setLoadingRegencies] = useState(false);
 
+  // Fetch provinces on mount
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLoadingProvinces(true);
+      try {
+        const res = await fetch(`${WILAYAH_API_URL}/provinces`);
+        if (!res.ok) throw new Error("Gagal mengambil data provinsi");
+        const data: Province[] = await res.json();
+        setProvinces(data);
+      } catch (err) {
+        console.error("Error fetching provinces:", err);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // Fetch regencies when province is selected
+  useEffect(() => {
+    if (!selectedProvinceId) {
+      setRegencies([]);
+      setSelectedRegencyId("");
+      return;
+    }
+
+    const fetchRegencies = async () => {
+      setLoadingRegencies(true);
+      try {
+        const res = await fetch(`${WILAYAH_API_URL}/regencies/${selectedProvinceId}`);
+        if (!res.ok) throw new Error("Gagal mengambil data kota/kabupaten");
+        const data: Regency[] = await res.json();
+        setRegencies(data);
+        setSelectedRegencyId(""); // Reset regency selection
+      } catch (err) {
+        console.error("Error fetching regencies:", err);
+      } finally {
+        setLoadingRegencies(false);
+      }
+    };
+    fetchRegencies();
+  }, [selectedProvinceId]);
+
+  // Fetch motifs
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(API_URL, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!res.ok) throw new Error("Gagal memuat data motif");
-        const data = await res.json();
+        const res = await motifService.getAll();
+        // Backend returns array directly
+        const data = Array.isArray(res.data) ? res.data : [];
         setMotifs(data);
       } catch (err) {
-        console.error(err);
+        console.error("Gagal memuat data motif:", err);
+        setMotifs([]);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [token]);
+  }, []);
 
-  const provinceOptions = useMemo(() => {
-    const base = island ? motifs.filter((m) => m.region === island) : motifs;
-    return Array.from(new Set(base.map((m) => m.province))).sort();
-  }, [island, motifs]);
-
+  // Filter motifs based on selected province and regency
   const filtered = useMemo(() => {
     let data = [...motifs];
-    if (island) data = data.filter((d) => d.region === island);
-    if (province) data = data.filter((d) => d.province === province);
 
+    // Filter by province
+    if (selectedProvinceId) {
+      const selectedProvince = provinces.find(p => p.id === selectedProvinceId);
+      if (selectedProvince) {
+        // Motif province format: "KOTA YOGYAKARTA, DI YOGYAKARTA" or "KABUPATEN REMBANG, JAWA TENGAH"
+        // Check if province name is in the motif.province string
+        data = data.filter((d) => {
+          const provinceName = selectedProvince.name.toUpperCase();
+          return d.province.toUpperCase().includes(provinceName);
+        });
+      }
+    }
+
+    // Filter by regency (kabupaten/kota)
+    if (selectedRegencyId) {
+      const selectedRegency = regencies.find(r => r.id === selectedRegencyId);
+      if (selectedRegency) {
+        // Check if regency name is in the motif.province string
+        data = data.filter((d) => {
+          const regencyName = selectedRegency.name.toUpperCase();
+          return d.province.toUpperCase().includes(regencyName);
+        });
+      }
+    }
+
+    // Filter by search query
     if (query.trim()) {
       const q = query.toLowerCase().trim();
       data = data.filter((d) =>
@@ -104,7 +172,7 @@ const MotifExplorer: React.FC = () => {
       );
     }
     return data;
-  }, [query, island, province, motifs]);
+  }, [query, selectedProvinceId, selectedRegencyId, motifs, provinces, regencies]);
 
   return (
     <section className="py-12 bg-white">
@@ -127,33 +195,47 @@ const MotifExplorer: React.FC = () => {
               </div>
 
               <select
-                value={island}
+                value={selectedProvinceId}
                 onChange={(e) => {
-                  setIsland(e.target.value as Island | "");
-                  setProvince("");
+                  setSelectedProvinceId(e.target.value);
+                  setSelectedRegencyId("");
                 }}
+                disabled={loadingProvinces}
                 className="border border-gray-300 px-3 py-2 rounded-lg cursor-pointer
-                  focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                  focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition
+                  disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
               >
-                <option value="">Semua Pulau</option>
-                {ISLAND_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                <option value="">
+                  {loadingProvinces ? "Memuat provinsi..." : "Semua Provinsi"}
+                </option>
+                {provinces.map((province) => (
+                  <option key={province.id} value={province.id}>
+                    {province.name}
+                  </option>
                 ))}
               </select>
 
               <select
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                disabled={!island}
+                value={selectedRegencyId}
+                onChange={(e) => setSelectedRegencyId(e.target.value)}
+                disabled={!selectedProvinceId || loadingRegencies}
                 className={`border border-gray-300 px-3 py-2 rounded-lg 
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition
-                  ${!island ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "cursor-pointer"}`}
+                  ${!selectedProvinceId || loadingRegencies 
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                    : "cursor-pointer"}`}
               >
                 <option value="">
-                  {island ? "Semua Provinsi" : "Pilih Pulau dulu"}
+                  {!selectedProvinceId 
+                    ? "Pilih Provinsi dulu" 
+                    : loadingRegencies 
+                    ? "Memuat kabupaten/kota..." 
+                    : "Semua Kabupaten/Kota"}
                 </option>
-                {provinceOptions.map((p) => (
-                  <option key={p} value={p}>{p}</option>
+                {regencies.map((regency) => (
+                  <option key={regency.id} value={regency.id}>
+                    {regency.name}
+                  </option>
                 ))}
               </select>
             </div>
