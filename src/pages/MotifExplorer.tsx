@@ -3,6 +3,7 @@ import { X, Search } from "lucide-react";
 import type { MotifItem } from "../assets/data/dataset";
 import { motifService } from "../services/api";
 import { WILAYAH_API_URL } from "../../config";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Province {
   id: string;
@@ -178,70 +179,88 @@ const MotifExplorer: React.FC = () => {
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-900">Motif Explorer</h1>
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Cari motif…"
+              className="border border-gray-300 px-3 py-2 rounded-lg pl-10 w-full 
+                focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+            />
+          </div>
+
+          <select
+            value={selectedProvinceId}
+            onChange={(e) => {
+              setSelectedProvinceId(e.target.value);
+              setSelectedRegencyId("");
+            }}
+            disabled={loadingProvinces}
+            className="border border-gray-300 px-3 py-2 rounded-lg cursor-pointer
+              focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition
+              disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {loadingProvinces ? "Memuat provinsi..." : "Semua Provinsi"}
+            </option>
+            {provinces.map((province) => (
+              <option key={province.id} value={province.id}>
+                {province.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedRegencyId}
+            onChange={(e) => setSelectedRegencyId(e.target.value)}
+            disabled={!selectedProvinceId || loadingRegencies}
+            className={`border border-gray-300 px-3 py-2 rounded-lg 
+              focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition
+              ${!selectedProvinceId || loadingRegencies 
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                : "cursor-pointer"}`}
+          >
+            <option value="">
+              {!selectedProvinceId 
+                ? "Pilih Provinsi dulu" 
+                : loadingRegencies 
+                ? "Memuat kabupaten/kota..." 
+                : "Semua Kabupaten/Kota"}
+            </option>
+            {regencies.map((regency) => (
+              <option key={regency.id} value={regency.id}>
+                {regency.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {loading ? (
-          <p className="text-center">Memuat data...</p>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-3 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Cari motif…"
-                  className="border border-gray-300 px-3 py-2 rounded-lg pl-10 w-full 
-                    focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="border border-gray-200 rounded-xl overflow-hidden shadow-sm"
+              >
+                <Skeleton className="h-44 w-full" />
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <div className="flex gap-2 mt-2">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                  </div>
+                </div>
               </div>
-
-              <select
-                value={selectedProvinceId}
-                onChange={(e) => {
-                  setSelectedProvinceId(e.target.value);
-                  setSelectedRegencyId("");
-                }}
-                disabled={loadingProvinces}
-                className="border border-gray-300 px-3 py-2 rounded-lg cursor-pointer
-                  focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition
-                  disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                <option value="">
-                  {loadingProvinces ? "Memuat provinsi..." : "Semua Provinsi"}
-                </option>
-                {provinces.map((province) => (
-                  <option key={province.id} value={province.id}>
-                    {province.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={selectedRegencyId}
-                onChange={(e) => setSelectedRegencyId(e.target.value)}
-                disabled={!selectedProvinceId || loadingRegencies}
-                className={`border border-gray-300 px-3 py-2 rounded-lg 
-                  focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition
-                  ${!selectedProvinceId || loadingRegencies 
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-                    : "cursor-pointer"}`}
-              >
-                <option value="">
-                  {!selectedProvinceId 
-                    ? "Pilih Provinsi dulu" 
-                    : loadingRegencies 
-                    ? "Memuat kabupaten/kota..." 
-                    : "Semua Kabupaten/Kota"}
-                </option>
-                {regencies.map((regency) => (
-                  <option key={regency.id} value={regency.id}>
-                    {regency.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((item) => (
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.length > 0 ? (
+              filtered.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setDetail(item)}
@@ -260,9 +279,13 @@ const MotifExplorer: React.FC = () => {
                     </div>
                   </div>
                 </button>
-              ))}
-            </div>
-          </>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">Tidak ada motif ditemukan</p>
+              </div>
+            )}
+          </div>
         )}
         <DetailModal item={detail} onClose={() => setDetail(null)} />
       </div>
