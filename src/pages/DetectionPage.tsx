@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
 import { X } from "lucide-react";
-import { predictionService } from "../services/api";
+import { predictionService, motifService } from "../services/api";
 
 interface TopPrediction {
   class_name: string;
@@ -21,6 +21,16 @@ interface DetectionResponse {
   data: DetectionData;
 }
 
+interface MotifData {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  region: string;
+  province: string;
+  tags: string[];
+}
+
 const DetectionPage: React.FC = () => {
   const { user, loading } = useContext(WastraContext) ?? {};
 
@@ -30,6 +40,8 @@ const DetectionPage: React.FC = () => {
   const [result, setResult] = useState<DetectionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryMessage, setRetryMessage] = useState<string | null>(null);
+  const [motifData, setMotifData] = useState<MotifData | null>(null);
+  const [loadingMotif, setLoadingMotif] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -59,6 +71,48 @@ const DetectionPage: React.FC = () => {
     setPreviewUrl(null);
     setResult(null);
     setError(null);
+    setMotifData(null);
+  };
+
+  const fetchMotifByPrediction = async (predictionName: string) => {
+    if (!predictionName) return;
+    
+    setLoadingMotif(true);
+    setMotifData(null);
+    
+    try {
+      const response = await motifService.getAll();
+      const motifs = Array.isArray(response.data) ? response.data : [];
+      
+      const normalizedPrediction = predictionName.toLowerCase().trim();
+      const predictionWithoutBatik = normalizedPrediction.replace(/^batik\s+/, '').trim();
+      
+      const matchedMotif = motifs.find((motif: MotifData) => {
+        const motifNameLower = motif.name.toLowerCase().trim();
+        const motifNameWithoutBatik = motifNameLower.replace(/^batik\s+/, '').trim();
+        
+        if (motifNameLower === normalizedPrediction) return true;
+        if (motifNameWithoutBatik === predictionWithoutBatik) return true;
+        
+        if (motifNameLower.includes(normalizedPrediction)) return true;
+        if (normalizedPrediction.includes(motifNameLower)) return true;
+        if (motifNameWithoutBatik.includes(predictionWithoutBatik)) return true;
+        if (predictionWithoutBatik.includes(motifNameWithoutBatik)) return true;
+        
+        return false;
+      });
+      
+      if (matchedMotif) {
+        setMotifData(matchedMotif);
+      } else {
+        setMotifData(null);
+      }
+    } catch (err: any) {
+      console.error("Error fetching motifs:", err);
+      setMotifData(null);
+    } finally {
+      setLoadingMotif(false);
+    }
   };
 
   const handleProcess = async () => {
@@ -87,6 +141,7 @@ const DetectionPage: React.FC = () => {
       if (json.success && json.data) {
         setResult(json.data);
         setRetryMessage(null);
+        await fetchMotifByPrediction(json.data.prediction);
       } else {
         setError("Response backend tidak valid");
       }
@@ -234,6 +289,71 @@ const DetectionPage: React.FC = () => {
               {(result.confidence * 100).toFixed(2)}%
             </span>
           </div>
+
+          {loadingMotif ? (
+            <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-amber-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+                <p className="text-amber-700 text-sm">Memuat deskripsi motif...</p>
+              </div>
+            </div>
+          ) : motifData ? (
+            <div className="mb-6 p-5 bg-amber-50 rounded-lg border border-amber-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Tentang Motif {motifData.name}
+              </h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                {motifData.description}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {motifData.region && (
+                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+                    {motifData.region}
+                  </span>
+                )}
+                {motifData.province && (
+                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+                    {motifData.province}
+                  </span>
+                )}
+                {motifData.tags && motifData.tags.length > 0 && 
+                  motifData.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full"
+                    >
+                      #{tag}
+                    </span>
+                  ))
+                }
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-500 text-sm italic">
+                Deskripsi untuk motif "{result.prediction}" belum tersedia di database.
+              </p>
+            </div>
+          )}
 
           {Array.isArray(result.top_predictions) &&
           result.top_predictions.length > 0 ? (
