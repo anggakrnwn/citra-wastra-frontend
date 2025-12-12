@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import { WastraContextProvider } from "./context/WastraContextProvider";
 import GalleryPage from "./pages/MotifExplorer";
 import About from "./pages/About";
-import WastraQuiz from "./pages/WastraQuiz";
+import MotifMaps from "./pages/MotifMaps";
 import AuthPage from "./pages/AuthPage";
 import MainLayout from "./components/layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -39,10 +39,10 @@ function App() {
             }
           />
           <Route
-            path="/WastraQuiz"
+            path="/maps"
             element={
               <ProtectedRoute>
-                <WastraQuiz />
+                <MotifMaps />
               </ProtectedRoute>
             }
           />
