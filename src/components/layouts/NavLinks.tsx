@@ -12,7 +12,7 @@ const NavLinks: React.FC<NavlinksProps> = ({ onClick, mobile, userRole }) => {
     { name: "Home", path: "/" },
     { name: "Detection", path: "/detection-page" },
     { name: "Gallery", path: "/gallery-page" },
-    { name: "Wastra Quiz", path: "/wastraquiz" },
+    { name: "Maps", path: "/maps" },
     { name: "About", path: "/about" },
   ];
 
