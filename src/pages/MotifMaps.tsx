@@ -172,7 +172,7 @@ const MotifMaps: React.FC = () => {
 
   return (
     <div className="w-full h-screen relative">
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-full max-w-2xl px-4">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000] w-full max-w-2xl px-4">
         <div className="bg-white rounded-lg shadow-lg flex items-center gap-2 p-2">
           <input
             type="text"
@@ -208,7 +208,7 @@ const MotifMaps: React.FC = () => {
         </div>
       </div>
       {!searchQuery && (
-        <div className="absolute top-20 left-4 z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs">
+        <div className="absolute top-20 left-4 z-30 md:z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs">
           <h1 className="text-xl font-bold text-gray-800 mb-1">
             Peta Asal Motif Batik
           </h1>
@@ -219,7 +219,7 @@ const MotifMaps: React.FC = () => {
       )}
 
       {searchQuery && filteredMarkers.length > 0 && (
-        <div className="absolute top-20 left-4 z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs">
+        <div className="absolute top-20 left-4 z-30 md:z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs">
           <p className="text-sm font-semibold text-gray-800">
             Ditemukan {filteredMarkers.length} motif batik
           </p>
@@ -230,7 +230,7 @@ const MotifMaps: React.FC = () => {
       )}
 
       {searchQuery && filteredMarkers.length === 0 && (
-        <div className="absolute top-20 left-4 z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs border-l-4 border-amber-500">
+        <div className="absolute top-20 left-4 z-30 md:z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs border-l-4 border-amber-500">
           <p className="text-sm font-semibold text-gray-800">
             Tidak ditemukan
           </p>
@@ -286,7 +286,7 @@ const MotifMaps: React.FC = () => {
         ))}
       </MapContainer>
 
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[1000]">
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000]">
         <button className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg shadow-lg font-semibold text-lg flex items-center gap-2 transition-colors">
           <svg
             className="w-6 h-6"
@@ -312,7 +312,7 @@ const MotifMaps: React.FC = () => {
       </div>
 
       {selectedMotif && (
-        <div className="absolute top-4 right-4 z-[1000] bg-white rounded-lg shadow-xl p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto">
+        <div className="absolute top-4 right-4 z-30 md:z-[1000] bg-white rounded-lg shadow-xl p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto">
           <button
             onClick={() => setSelectedMotif(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
