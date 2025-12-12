@@ -42,6 +42,8 @@ const DetectionPage: React.FC = () => {
   const [retryMessage, setRetryMessage] = useState<string | null>(null);
   const [motifData, setMotifData] = useState<MotifData | null>(null);
   const [loadingMotif, setLoadingMotif] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -60,10 +62,143 @@ const DetectionPage: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    processImageFile(file);
+  };
+
+  const processImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError("File harus berupa gambar!");
+      return;
+    }
     setSelectedImage(file);
     setPreviewUrl(URL.createObjectURL(file));
     setResult(null);
     setError(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handleCameraClick = async () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.style.position = 'fixed';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.zIndex = '9999';
+        video.style.objectFit = 'cover';
+        
+        const canvas = document.createElement('canvas');
+        const captureBtn = document.createElement('button');
+        captureBtn.textContent = 'Capture Photo';
+        captureBtn.style.position = 'fixed';
+        captureBtn.style.bottom = '20px';
+        captureBtn.style.left = '50%';
+        captureBtn.style.transform = 'translateX(-50%)';
+        captureBtn.style.zIndex = '10000';
+        captureBtn.style.padding = '12px 24px';
+        captureBtn.style.backgroundColor = '#d97706';
+        captureBtn.style.color = 'white';
+        captureBtn.style.border = 'none';
+        captureBtn.style.borderRadius = '8px';
+        captureBtn.style.cursor = 'pointer';
+        captureBtn.style.fontSize = '16px';
+        captureBtn.style.fontWeight = 'bold';
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.style.position = 'fixed';
+        closeBtn.style.top = '20px';
+        closeBtn.style.right = '20px';
+        closeBtn.style.zIndex = '10000';
+        closeBtn.style.padding = '10px 15px';
+        closeBtn.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        closeBtn.style.color = 'white';
+        closeBtn.style.border = 'none';
+        closeBtn.style.borderRadius = '50%';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.fontSize = '20px';
+        
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        overlay.style.zIndex = '9998';
+        
+        const cleanup = () => {
+          stream.getTracks().forEach(track => track.stop());
+          document.body.removeChild(video);
+          document.body.removeChild(overlay);
+          document.body.removeChild(captureBtn);
+          document.body.removeChild(closeBtn);
+        };
+        
+        captureBtn.onclick = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+                processImageFile(file);
+              }
+              cleanup();
+            }, 'image/jpeg', 0.95);
+          }
+        };
+        
+        closeBtn.onclick = cleanup;
+        
+        document.body.appendChild(overlay);
+        document.body.appendChild(video);
+        document.body.appendChild(captureBtn);
+        document.body.appendChild(closeBtn);
+      } catch (err) {
+        console.error('Error accessing camera:', err);
+        if (cameraInputRef.current) {
+          cameraInputRef.current.click();
+        }
+      }
+    } else {
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      }
+    }
   };
 
   const resetImage = () => {
@@ -195,7 +330,16 @@ const DetectionPage: React.FC = () => {
         Upload your batik photo and let our AI recognize its motif and origin.
       </p>
 
-      <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:border-orange-400 transition">
+      <div
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition ${
+          isDragging
+            ? "border-amber-500 bg-amber-50"
+            : "border-gray-300 bg-gray-50 hover:border-amber-400"
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         {previewUrl ? (
           <div className="relative">
             <img
@@ -237,18 +381,83 @@ const DetectionPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <p className="text-gray-500 mb-4">
-              Drag & drop an image here or click the button below
-            </p>
-            <label className="inline-block px-6 py-3 bg-orange-600 text-white rounded-lg cursor-pointer hover:bg-orange-700 transition">
-              Choose Image
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
+            <div className="mb-6">
+              <svg
+                className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <p className="text-gray-600 mb-2 font-medium">
+                {isDragging ? "Drop image here" : "Drag & drop image here"}
+              </p>
+              <p className="text-sm text-gray-500 mb-6">or</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <label className="inline-flex items-center px-6 py-3 bg-amber-600 text-white rounded-lg cursor-pointer hover:bg-amber-700 transition shadow-md">
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Select Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleCameraClick}
+                className="inline-flex items-center px-6 py-3 bg-amber-600 text-white rounded-lg cursor-pointer hover:bg-amber-700 transition shadow-md"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Use Camera
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -258,7 +467,7 @@ const DetectionPage: React.FC = () => {
           <button
             onClick={handleProcess}
             disabled={processing}
-            className={`px-6 py-3 rounded-lg text-white font-medium transition ${
+            className={`px-6 py-3 rounded-lg text-white font-medium transition shadow-md ${
               processing
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-amber-600 hover:bg-amber-700"
