@@ -489,7 +489,7 @@ const DetectionPage: React.FC = () => {
       )}
 
       {result && (
-        <div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition-colors">
+        <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
               {result.prediction}
@@ -574,7 +574,7 @@ const DetectionPage: React.FC = () => {
                 {result.top_predictions.map((p, i) => (
                   <li
                     key={i}
-                    className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-lg shadow-sm"
+                    className="flex justify-between items-center bg-white/50 dark:bg-gray-800/50 px-4 py-2 rounded-lg shadow-sm"
                   >
                     <span className="font-medium text-gray-800 dark:text-white">{p.class_name}</span>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
