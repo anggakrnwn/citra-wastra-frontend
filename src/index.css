@@ -34,6 +34,16 @@
   100% { transform: translateY(0); }
 }
 
+/* Animasi floating cards dengan rotasi */
+@keyframes floatUpDown {
+  0%, 100% {
+    transform: translateY(0) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-25px) rotate(var(--rotate, 0deg));
+  }
+}
+
 /* Classes utilitas animasi */
 @layer utilities {
   .animate-slide-in-left {
@@ -133,5 +143,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }

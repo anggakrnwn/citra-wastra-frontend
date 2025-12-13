@@ -74,11 +74,11 @@ const AdminUsers = () => {
   }, [fetchUsers]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-white dark:bg-gray-900 min-h-screen transition-colors">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen User</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manajemen User</h1>
+          <p className="text-sm text-muted-foreground dark:text-gray-400">
             Total user: {users.length}
           </p>
         </div>
@@ -113,7 +113,7 @@ const AdminUsers = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </span>
                   <Select
@@ -136,7 +136,7 @@ const AdminUsers = () => {
             </Card>
           ))
         ) : (
-          <p className="text-gray-500 text-center">Tidak ada user ditemukan</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center">Tidak ada user ditemukan</p>
         )}
       </div>
     </div>

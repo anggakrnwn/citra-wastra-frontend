@@ -2,9 +2,10 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import Home from "./pages/Home";
 import { WastraContextProvider } from "./context/WastraContextProvider";
+import { ThemeProvider } from "./context/ThemeContext";
 import GalleryPage from "./pages/MotifExplorer";
 import About from "./pages/About";
-import WastraQuiz from "./pages/WastraQuiz";
+import MotifMaps from "./pages/MotifMaps";
 import AuthPage from "./pages/AuthPage";
 import MainLayout from "./components/layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,8 +22,9 @@ function App() {
   }, [navigate]);
 
   return (
-    <WastraContextProvider>
-      <Routes>
+    <ThemeProvider>
+      <WastraContextProvider>
+        <Routes>
         <Route element={<MainLayout />}>
           {/* PUBLIC */}
           <Route path="/" element={<Home />} />
@@ -39,10 +41,10 @@ function App() {
             }
           />
           <Route
-            path="/WastraQuiz"
+            path="/maps"
             element={
               <ProtectedRoute>
-                <WastraQuiz />
+                <MotifMaps />
               </ProtectedRoute>
             }
           />
@@ -70,7 +72,8 @@ function App() {
 
         <Route path="/login" element={<AuthPage />} />
       </Routes>
-    </WastraContextProvider>
+      </WastraContextProvider>
+    </ThemeProvider>
   );
 }
 
