@@ -1,26 +1,36 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import hero1 from "../assets/images/hero1.jpeg";
 import hero2 from "../assets/images/hero2.jpeg";
-import hero3 from "../assets/images/hero3.jpeg";
-import hero4 from "../assets/images/hero4.jpeg";
-import star1 from "../assets/icons/starwastra1.png";
-import star2 from "../assets/icons/starwastra2.png";
 import { useWastra } from "../context/WastraContext"; 
 
-interface ImageItem {
-  src: string;
-  alt: string;
-}
-
-const images: ImageItem[] = [
+const images = [
   { src: hero1, alt: "Batik Pattern 1" },
   { src: hero2, alt: "Batik Pattern 2" },
-  { src: hero3, alt: "Batik Pattern 3" },
-  { src: hero4, alt: "Batik Pattern 4" },
 ];
 
-const delayClasses = ["delay-0", "delay-200", "delay-400", "delay-600"];
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+    },
+  },
+};
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
@@ -35,73 +45,69 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-screen bg-white flex items-center justify-center py-10 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        <div>
-          <div className="flex space-x-2 mb-6">
-            {Array.from({ length: 3 }, (_, i) => (
-              <span key={i} className="w-4 h-4 rounded-full bg-amber-600" />
-            ))}
-          </div>
-
-          <div className="animate-slide-in-left">
-            <h1 className="text-display font-extrabold text-gray-900 leading-tight">
-              Preserving Tradition with{" "}
-              <span className="text-amber-700 underline">Citra Wastra</span>
-            </h1>
-
-            <p className="mt-6 max-w-md text-body-lg text-gray-600 leading-relaxed">
-              <strong>Citra Wastra</strong> uses advanced machine learning to
-              identify the origin and pattern of traditional Indonesian batik,
-              making cultural heritage more accessible, recognizable, and
-              preserved in the digital era.
-            </p>
-          </div>
-
-          <button
-            onClick={handleLaunchApp}
-            className="mt-8 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md font-semibold transition"
-            aria-label="Launch Citra Wastra App"
+    <section className="bg-white dark:bg-gray-900 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 md:pt-24 md:pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          {/* Text Content */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="space-y-6"
           >
-            Launch App →
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 grid-rows-2 gap-4">
-          {images.map((img, i) => (
-            <div
-              key={i}
-              className={`relative opacity-0 animate-slide-in-up ${delayClasses[i]}`}
+            <motion.h1
+              variants={itemVariants}
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
             >
-              <img
-                src={img.src}
-                alt={img.alt}
-                loading="lazy"
-                className="rounded-lg object-cover w-full h-40 md:h-48 lg:h-56"
-              />
+              Preserving Tradition with{" "}
+              <span className="text-amber-600 dark:text-amber-500">Citra Wastra</span>
+            </motion.h1>
 
-              {i === 0 && (
-                <>
+            <motion.p
+              variants={itemVariants}
+              className="text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-lg"
+            >
+              Discover the origin, pattern, and cultural meaning of Indonesian batik 
+              through advanced AI technology.
+            </motion.p>
+
+            <motion.div variants={itemVariants} className="pt-2">
+              <button
+                onClick={handleLaunchApp}
+                className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-lg font-semibold text-base md:text-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+              >
+                Get Started
+              </button>
+            </motion.div>
+          </motion.div>
+
+          {/* Images */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="flex flex-col gap-4 h-full justify-between"
+          >
+            {images.map((img, i) => (
+              <motion.div
+                key={i}
+                variants={itemVariants}
+                className="relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group flex-1"
+              >
+                <div className="relative w-full h-full min-h-[180px] max-h-[200px]">
                   <img
-                    src={star1}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute top-2 left-2 w-6 h-6 animate-float select-none pointer-events-none"
+                    src={img.src}
+                    alt={img.alt}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />
-                  <img
-                    src={star2}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute top-10 left-8 w-5 h-5 animate-float delay-200 select-none pointer-events-none"
-                  />
-                </>
-              )}
-            </div>
-          ))}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
-
-      <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-amber-600 rounded-full animate-bounce"></div>
     </section>
   );
 };
