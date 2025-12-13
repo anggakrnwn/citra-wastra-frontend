@@ -44,8 +44,6 @@ const AdminMotif: React.FC = () => {
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  
-  // Wilayah Indonesia states
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [regencies, setRegencies] = useState<Regency[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<string>("");
@@ -53,23 +51,15 @@ const AdminMotif: React.FC = () => {
   const [loadingProvinces, setLoadingProvinces] = useState(false);
   const [loadingRegencies, setLoadingRegencies] = useState(false);
 
-  // Fetch provinces on mount
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoadingProvinces(true);
       try {
-        console.log("Fetching provinces from:", `${WILAYAH_API_URL}/provinces`);
         const res = await fetch(`${WILAYAH_API_URL}/provinces`);
-        console.log("Provinces response status:", res.status, res.statusText);
-        
         if (!res.ok) {
-          const errorText = await res.text();
-          console.error("Error response:", errorText);
           throw new Error(`Gagal mengambil data provinsi: ${res.status} ${res.statusText}`);
         }
-        
         const data: Province[] = await res.json();
-        console.log("Provinces data received:", data.length, "provinces");
         setProvinces(data);
       } catch (err) {
         console.error("Error fetching provinces:", err);
@@ -81,7 +71,6 @@ const AdminMotif: React.FC = () => {
     fetchProvinces();
   }, []);
 
-  // Fetch regencies when province is selected
   useEffect(() => {
     if (!selectedProvinceId) {
       setRegencies([]);
@@ -92,20 +81,13 @@ const AdminMotif: React.FC = () => {
     const fetchRegencies = async () => {
       setLoadingRegencies(true);
       try {
-        console.log("Fetching regencies from:", `${WILAYAH_API_URL}/regencies/${selectedProvinceId}`);
         const res = await fetch(`${WILAYAH_API_URL}/regencies/${selectedProvinceId}`);
-        console.log("Regencies response status:", res.status, res.statusText);
-        
         if (!res.ok) {
-          const errorText = await res.text();
-          console.error("Error response:", errorText);
           throw new Error(`Gagal mengambil data kota/kabupaten: ${res.status} ${res.statusText}`);
         }
-        
         const data: Regency[] = await res.json();
-        console.log("Regencies data received:", data.length, "regencies");
         setRegencies(data);
-        setSelectedRegencyId(""); // Reset regency selection
+        setSelectedRegencyId("");
       } catch (err) {
         console.error("Error fetching regencies:", err);
         alert(`Error: ${err instanceof Error ? err.message : "Gagal mengambil data kota/kabupaten"}`);
@@ -116,7 +98,6 @@ const AdminMotif: React.FC = () => {
     fetchRegencies();
   }, [selectedProvinceId]);
 
-  // Update form.province when regency is selected
   useEffect(() => {
     if (selectedRegencyId && regencies.length > 0 && selectedProvinceId) {
       const selectedRegency = regencies.find(r => r.id === selectedRegencyId);
@@ -128,10 +109,8 @@ const AdminMotif: React.FC = () => {
           ...prev, 
           province: provinceValue
         }));
-        console.log("Province updated:", provinceValue);
       }
     } else if (!selectedRegencyId && selectedProvinceId) {
-      // Reset province if regency is cleared but province is still selected
       setForm(prev => ({ ...prev, province: "" }));
     }
   }, [selectedRegencyId, regencies, selectedProvinceId, provinces]);
@@ -196,7 +175,6 @@ const AdminMotif: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Validasi sebelum submit
       if (!form.province) {
         alert("Silakan pilih provinsi dan kota/kabupaten terlebih dahulu");
         return;
@@ -208,7 +186,6 @@ const AdminMotif: React.FC = () => {
       }
 
       const payload = { ...form };
-      console.log("Submitting payload:", payload);
       
       const res = await fetch(
         editing ? `${API_URL}/${editing.id}` : API_URL,
@@ -228,12 +205,10 @@ const AdminMotif: React.FC = () => {
           message: `Error ${res.status}: ${res.statusText}`
         }));
         
-        console.error("Error response:", errorData);
         throw new Error(errorData.error || errorData.message || "Gagal menyimpan motif");
       }
       
       const saved = await res.json();
-      console.log("Motif saved successfully:", saved);
 
       if (editing) {
         setMotifs((prev) =>
@@ -287,8 +262,6 @@ const AdminMotif: React.FC = () => {
       tags: item.tags,
     });
     
-    // Try to extract province and regency from existing province string
-    // Format: "KOTA/KABUPATEN, PROVINSI"
     const parts = item.province.split(", ");
     if (parts.length === 2) {
       const regencyName = parts[0];
@@ -296,7 +269,6 @@ const AdminMotif: React.FC = () => {
       const province = provinces.find(p => p.name === provinceName);
       if (province) {
         setSelectedProvinceId(province.id);
-        // Fetch regencies first, then find the regency
         try {
           const res = await fetch(`${WILAYAH_API_URL}/regencies/${province.id}`);
           if (res.ok) {
@@ -315,14 +287,14 @@ const AdminMotif: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Admin Motif Explorer</h1>
+    <div className="max-w-6xl mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen transition-colors">
+      <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Admin Motif Explorer</h1>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white border rounded-xl shadow-sm p-6 mb-8 space-y-4"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 mb-8 space-y-4 transition-colors"
       >
-        <h2 className="text-xl font-semibold mb-2">
+        <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
           {editing ? "Edit Motif" : "Tambah Motif Baru"}
         </h2>
 
@@ -333,21 +305,21 @@ const AdminMotif: React.FC = () => {
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
-            className="border rounded-lg px-3 py-2"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
           <input
             type="text"
             placeholder="Daerah/Pulau (opsional)"
             value={form.region}
             onChange={(e) => setForm({ ...form, region: e.target.value })}
-            className="border rounded-lg px-3 py-2"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
           <select
             value={selectedProvinceId}
             onChange={(e) => setSelectedProvinceId(e.target.value)}
             required
             disabled={loadingProvinces}
-            className="border rounded-lg px-3 py-2"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500"
           >
             <option value="">
               {loadingProvinces ? "Memuat provinsi..." : "Pilih Provinsi"}
@@ -363,7 +335,7 @@ const AdminMotif: React.FC = () => {
             onChange={(e) => setSelectedRegencyId(e.target.value)}
             required
             disabled={!selectedProvinceId || loadingRegencies}
-            className="border rounded-lg px-3 py-2"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500"
           >
             <option value="">
               {!selectedProvinceId 
@@ -384,7 +356,7 @@ const AdminMotif: React.FC = () => {
             onChange={(e) => {
               if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
             }}
-            className="border rounded-lg px-3 py-2"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 dark:file:bg-amber-700 file:text-white hover:file:bg-amber-700 dark:hover:file:bg-amber-600"
           />
         </div>
 
@@ -398,7 +370,7 @@ const AdminMotif: React.FC = () => {
             <button
               type="button"
               onClick={() => setForm({ ...form, image: "" })}
-              className="text-red-600 hover:underline"
+              className="text-red-600 dark:text-red-400 hover:underline"
             >
               Hapus Gambar
             </button>
@@ -409,7 +381,7 @@ const AdminMotif: React.FC = () => {
           placeholder="Deskripsi"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full border rounded-lg px-3 py-2"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
         />
 
         <input
@@ -425,7 +397,7 @@ const AdminMotif: React.FC = () => {
                 .filter(Boolean),
             })
           }
-          className="w-full border rounded-lg px-3 py-2"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
         />
 
         <div className="flex gap-2">
@@ -434,9 +406,9 @@ const AdminMotif: React.FC = () => {
             disabled={uploading}
             className={`${
               uploading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-amber-600 hover:bg-amber-700"
-            } text-white px-4 py-2 rounded-lg`}
+                ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                : "bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600"
+            } text-white px-4 py-2 rounded-lg transition-colors`}
           >
             {uploading
               ? "Mengunggah..."
@@ -448,7 +420,7 @@ const AdminMotif: React.FC = () => {
             <button
               type="button"
               onClick={resetForm}
-              className="bg-gray-200 px-4 py-2 rounded-lg"
+              className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               Batal
             </button>
@@ -457,12 +429,12 @@ const AdminMotif: React.FC = () => {
       </form>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
+      <div className="overflow-x-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-colors">
         {loading ? (
-          <p className="text-center p-4">Memuat data...</p>
+          <p className="text-center p-4 text-gray-900 dark:text-white">Memuat data...</p>
         ) : (
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
               <tr>
                 <th className="px-4 py-2">Nama</th>
                 <th className="px-4 py-2">Daerah</th>
@@ -474,21 +446,21 @@ const AdminMotif: React.FC = () => {
             <tbody>
               {motifs.length > 0 ? (
                 motifs.map((m) => (
-                  <tr key={m.id} className="border-t">
-                    <td className="px-4 py-2 font-medium">{m.name}</td>
-                    <td className="px-4 py-2">{m.region}</td>
-                    <td className="px-4 py-2">{m.province}</td>
-                    <td className="px-4 py-2">{m.tags.join(", ")}</td>
+                  <tr key={m.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-white">{m.name}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{m.region}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{m.province}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{m.tags.join(", ")}</td>
                     <td className="px-4 py-2 flex gap-2">
                       <button
                         onClick={() => handleEdit(m)}
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(m.id)}
-                        className="text-red-600 hover:underline"
+                        className="text-red-600 dark:text-red-400 hover:underline"
                       >
                         Hapus
                       </button>
@@ -497,7 +469,7 @@ const AdminMotif: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-4 text-gray-500">
+                  <td colSpan={5} className="text-center py-4 text-gray-500 dark:text-gray-400">
                     Belum ada motif
                   </td>
                 </tr>
@@ -506,22 +478,21 @@ const AdminMotif: React.FC = () => {
           </table>
         )}
       </div>
-      {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[300px]">
-            <h3 className="text-lg font-semibold mb-4">Konfirmasi Hapus</h3>
-            <p className="mb-6">Yakin ingin menghapus motif ini?</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 dark:bg-opacity-60 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[300px] transition-colors">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Konfirmasi Hapus</h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">Yakin ingin menghapus motif ini?</p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="bg-gray-200 px-4 py-2 rounded-lg"
+                className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 Batal
               </button>
               <button
                 onClick={confirmDelete}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg"
+                className="bg-red-600 dark:bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
               >
                 Hapus
               </button>
