@@ -62,15 +62,15 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-center text-2xl font-bold text-amber-600">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-colors">
+        <h2 className="text-center text-2xl font-bold text-amber-600 dark:text-amber-500">
           {isLogin ? "Sign in" : "Register"}
         </h2>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
           {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-md text-sm">
               {error}
             </div>
           )}
@@ -79,7 +79,7 @@ const AuthPage: React.FC = () => {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
                 Name
               </label>
@@ -90,8 +90,9 @@ const AuthPage: React.FC = () => {
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md 
-                           focus:border-amber-500 focus:ring-2 focus:ring-amber-400 
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md 
+                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                           focus:border-amber-500 dark:focus:border-amber-500 focus:ring-2 focus:ring-amber-400 
                            outline-none transition"
               />
             </div>
@@ -100,7 +101,7 @@ const AuthPage: React.FC = () => {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Email
             </label>
@@ -111,8 +112,9 @@ const AuthPage: React.FC = () => {
               required
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full p-3 border border-gray-300 rounded-md 
-                         focus:border-amber-500 focus:ring-2 focus:ring-amber-400 
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md 
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         focus:border-amber-500 dark:focus:border-amber-500 focus:ring-2 focus:ring-amber-400 
                          outline-none transition"
             />
           </div>
@@ -120,7 +122,7 @@ const AuthPage: React.FC = () => {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Password
             </label>
@@ -133,14 +135,15 @@ const AuthPage: React.FC = () => {
                 minLength={6}
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md 
-                           focus:border-amber-500 focus:ring-2 focus:ring-amber-400 
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md 
+                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                           focus:border-amber-500 dark:focus:border-amber-500 focus:ring-2 focus:ring-amber-400 
                            outline-none pr-10 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amber-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-500"
               >
                 {showPassword ? (
                   <EyeSlashIcon className="w-5 h-5" />
@@ -155,7 +158,7 @@ const AuthPage: React.FC = () => {
             type="submit"
             disabled={loading}
             className="w-full py-3 px-4 rounded-lg text-white font-medium 
-             bg-amber-600 hover:bg-amber-700 
+             bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600
              disabled:opacity-60 transition-colors flex justify-center items-center gap-2"
           >
             {loading ? (
@@ -194,14 +197,14 @@ const AuthPage: React.FC = () => {
             )}
           </button>
 
-          <div className="text-center text-sm text-gray-600">
+          <div className="text-center text-sm text-gray-600 dark:text-gray-400">
             {isLogin ? (
               <>
                 Don't have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setIsLogin(false)}
-                  className="text-amber-600 hover:underline font-medium"
+                  className="text-amber-600 dark:text-amber-500 hover:underline font-medium"
                 >
                   Register
                 </button>
@@ -212,7 +215,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsLogin(true)}
-                  className="text-amber-600 hover:underline font-medium"
+                  className="text-amber-600 dark:text-amber-500 hover:underline font-medium"
                 >
                   Sign in
                 </button>
@@ -226,10 +229,10 @@ const AuthPage: React.FC = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
               </div>
             </div>
 
@@ -252,7 +255,7 @@ const AuthPage: React.FC = () => {
                 }
               }}
               disabled={loading}
-              className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

@@ -52,7 +52,7 @@ const DetectionPage: React.FC = () => {
   }, [previewUrl]);
 
   if (loading) {
-    return <p className="text-center mt-6">Checking login status...</p>;
+    return <p className="text-center mt-6 text-gray-900 dark:text-white">Checking login status...</p>;
   }
 
   if (!user) {
@@ -323,18 +323,18 @@ const DetectionPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-center mb-4 text-gray-800">
+      <h1 className="text-3xl font-bold text-center mb-4 text-gray-800 dark:text-white">
         Batik Motif Detection
       </h1>
-      <p className="text-lg text-center text-gray-600 mb-8">
+      <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-8">
         Upload your batik photo and let our AI recognize its motif and origin.
       </p>
 
       <div
         className={`border-2 border-dashed rounded-xl p-8 text-center transition ${
           isDragging
-            ? "border-amber-500 bg-amber-50"
-            : "border-gray-300 bg-gray-50 hover:border-amber-400"
+            ? "border-amber-500 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30"
+            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-amber-400 dark:hover:border-amber-500"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -383,7 +383,7 @@ const DetectionPage: React.FC = () => {
           <>
             <div className="mb-6">
               <svg
-                className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -395,13 +395,13 @@ const DetectionPage: React.FC = () => {
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
-              <p className="text-gray-600 mb-2 font-medium">
+              <p className="text-gray-600 dark:text-gray-300 mb-2 font-medium">
                 {isDragging ? "Drop image here" : "Drag & drop image here"}
               </p>
-              <p className="text-sm text-gray-500 mb-6">or</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">or</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <label className="inline-flex items-center px-6 py-3 bg-amber-600 text-white rounded-lg cursor-pointer hover:bg-amber-700 transition shadow-md">
+              <label className="inline-flex items-center px-6 py-3 bg-amber-600 dark:bg-amber-700 text-white rounded-lg cursor-pointer hover:bg-amber-700 dark:hover:bg-amber-600 transition shadow-md">
                 <svg
                   className="w-5 h-5 mr-2"
                   fill="none"
@@ -426,7 +426,7 @@ const DetectionPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCameraClick}
-                className="inline-flex items-center px-6 py-3 bg-amber-600 text-white rounded-lg cursor-pointer hover:bg-amber-700 transition shadow-md"
+                className="inline-flex items-center px-6 py-3 bg-amber-600 dark:bg-amber-700 text-white rounded-lg cursor-pointer hover:bg-amber-700 dark:hover:bg-amber-600 transition shadow-md"
               >
                 <svg
                   className="w-5 h-5 mr-2"
@@ -469,8 +469,8 @@ const DetectionPage: React.FC = () => {
             disabled={processing}
             className={`px-6 py-3 rounded-lg text-white font-medium transition shadow-md ${
               processing
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-amber-600 hover:bg-amber-700"
+                ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                : "bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600"
             }`}
           >
             {processing ? "Processing..." : "Start Detection"}
@@ -485,25 +485,25 @@ const DetectionPage: React.FC = () => {
       )}
       
       {error && (
-        <p className="mt-4 text-center text-red-500 font-semibold">{error}</p>
+        <p className="mt-4 text-center text-red-500 dark:text-red-400 font-semibold">{error}</p>
       )}
 
       {result && (
-        <div className="mt-8 p-6 bg-white rounded-xl shadow-md border border-gray-200">
+        <div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition-colors">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold text-gray-800">
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
               {result.prediction}
             </h2>
-            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+            <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-sm font-medium rounded-full">
               {(result.confidence * 100).toFixed(2)}%
             </span>
           </div>
 
           {loadingMotif ? (
-            <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
               <div className="flex items-center gap-2">
                 <svg
-                  className="animate-spin h-5 w-5 text-amber-600"
+                  className="animate-spin h-5 w-5 text-amber-600 dark:text-amber-500"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -522,25 +522,25 @@ const DetectionPage: React.FC = () => {
                     d="M4 12a8 8 0 018-8v8H4z"
                   ></path>
                 </svg>
-                <p className="text-amber-700 text-sm">Memuat deskripsi motif...</p>
+                <p className="text-amber-700 dark:text-amber-400 text-sm">Memuat deskripsi motif...</p>
               </div>
             </div>
           ) : motifData ? (
-            <div className="mb-6 p-5 bg-amber-50 rounded-lg border border-amber-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            <div className="mb-6 p-5 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
                 Tentang Motif {motifData.name}
               </h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                 {motifData.description}
               </p>
               <div className="flex gap-2 flex-wrap">
                 {motifData.region && (
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full">
                     {motifData.region}
                   </span>
                 )}
                 {motifData.province && (
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full">
                     {motifData.province}
                   </span>
                 )}
@@ -548,7 +548,7 @@ const DetectionPage: React.FC = () => {
                   motifData.tags.map((tag, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full"
+                      className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full"
                     >
                       #{tag}
                     </span>
@@ -557,8 +557,8 @@ const DetectionPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-500 text-sm italic">
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+              <p className="text-gray-500 dark:text-gray-400 text-sm italic">
                 Deskripsi untuk motif "{result.prediction}" belum tersedia di database.
               </p>
             </div>
@@ -567,17 +567,17 @@ const DetectionPage: React.FC = () => {
           {Array.isArray(result.top_predictions) &&
           result.top_predictions.length > 0 ? (
             <div>
-              <h3 className="text-lg font-medium mb-2 text-gray-700">
+              <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">
                 Top-3 Predictions:
               </h3>
               <ul className="space-y-2">
                 {result.top_predictions.map((p, i) => (
                   <li
                     key={i}
-                    className="flex justify-between items-center bg-gray-50 px-4 py-2 rounded-lg shadow-sm"
+                    className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-lg shadow-sm"
                   >
-                    <span className="font-medium text-gray-800">{p.class_name}</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="font-medium text-gray-800 dark:text-white">{p.class_name}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {(p.confidence * 100).toFixed(2)}%
                     </span>
                   </li>
@@ -585,7 +585,7 @@ const DetectionPage: React.FC = () => {
               </ul>
             </div>
           ) : (
-            <p className="text-gray-400 mt-2">Belum ada prediksi top-3</p>
+            <p className="text-gray-400 dark:text-gray-500 mt-2">Belum ada prediksi top-3</p>
           )}
         </div>
       )}
