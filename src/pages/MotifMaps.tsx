@@ -171,7 +171,7 @@ const MotifMaps: React.FC = () => {
 
   return (
     <div className="w-full h-screen relative bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="absolute top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000] w-[calc(100%-1rem)] sm:w-full max-w-2xl px-2 sm:px-4">
+      <div className="absolute top-24 sm:top-24 md:top-20 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000] w-[calc(100%-1rem)] sm:w-full max-w-2xl px-2 sm:px-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 transition-colors">
           <input
             type="text"
@@ -207,7 +207,7 @@ const MotifMaps: React.FC = () => {
         </div>
       </div>
       {!searchQuery && (
-        <div className="absolute top-14 sm:top-20 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
+        <div className="absolute top-40 sm:top-40 md:top-32 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
           <h1 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white mb-1">
             Peta Asal Motif Batik
           </h1>
@@ -218,7 +218,7 @@ const MotifMaps: React.FC = () => {
       )}
 
       {searchQuery && filteredMarkers.length > 0 && (
-        <div className="absolute top-14 sm:top-20 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
+        <div className="absolute top-40 sm:top-40 md:top-32 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
           <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white">
             Ditemukan {filteredMarkers.length} motif batik
           </p>
@@ -229,7 +229,7 @@ const MotifMaps: React.FC = () => {
       )}
 
       {searchQuery && filteredMarkers.length === 0 && (
-        <div className="absolute top-14 sm:top-20 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs border-l-4 border-amber-500 transition-colors">
+        <div className="absolute top-40 sm:top-40 md:top-32 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs border-l-4 border-amber-500 transition-colors">
           <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white">
             Tidak ditemukan
           </p>
@@ -264,9 +264,18 @@ const MotifMaps: React.FC = () => {
               },
             }}
           >
-            <Popup className="custom-popup">
-              <div className="p-2 min-w-[150px] sm:min-w-[200px] bg-white dark:bg-gray-800">
-                <h3 className="font-semibold text-sm sm:text-base text-gray-800 dark:text-white mb-1">
+            <Popup 
+              className="custom-popup"
+              autoPan={true}
+              autoPanPadding={[80, 50]}
+              autoPanPaddingTopLeft={[0, 80]}
+              autoPanPaddingBottomRight={[0, 0]}
+              closeButton={true}
+              maxWidth={300}
+              minWidth={200}
+            >
+              <div className="p-3 bg-white dark:bg-gray-800">
+                <h3 className="font-semibold text-sm sm:text-base text-gray-800 dark:text-white mb-2">
                   {marker.motif.name}
                 </h3>
                 <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
@@ -277,9 +286,15 @@ const MotifMaps: React.FC = () => {
                     Region: {marker.motif.region}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 mb-2">
                   {marker.motif.description}
                 </p>
+                <button
+                  onClick={() => setSelectedMotif(marker.motif)}
+                  className="w-full mt-2 px-3 py-1.5 bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-colors"
+                >
+                  Lihat Detail
+                </button>
               </div>
             </Popup>
           </Marker>
@@ -313,7 +328,7 @@ const MotifMaps: React.FC = () => {
       </div>
 
       {selectedMotif && (
-        <div className="fixed sm:absolute inset-0 sm:top-4 sm:right-4 sm:inset-auto z-40 md:z-[1000] bg-white dark:bg-gray-800 rounded-none sm:rounded-lg shadow-xl p-4 sm:p-6 max-w-full sm:max-w-sm w-full sm:w-auto h-full sm:h-auto max-h-screen sm:max-h-[80vh] overflow-y-auto transition-colors">
+        <div className="fixed sm:absolute inset-0 sm:top-4 sm:right-4 sm:inset-auto z-[1001] bg-white dark:bg-gray-800 rounded-none sm:rounded-lg shadow-xl p-4 sm:p-6 max-w-full sm:max-w-sm w-full sm:w-auto h-full sm:h-auto max-h-screen sm:max-h-[80vh] overflow-y-auto transition-colors">
           <button
             onClick={() => setSelectedMotif(null)}
             className="fixed sm:absolute top-4 right-4 sm:top-2 sm:right-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 z-10 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg"
