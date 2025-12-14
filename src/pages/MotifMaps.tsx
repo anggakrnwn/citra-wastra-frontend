@@ -170,12 +170,12 @@ const MotifMaps: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-screen relative bg-white dark:bg-gray-900">
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000] w-full max-w-2xl px-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center gap-2 p-2 transition-colors">
+    <div className="w-full h-screen relative bg-white dark:bg-gray-900 overflow-hidden">
+      <div className="absolute top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000] w-[calc(100%-1rem)] sm:w-full max-w-2xl px-2 sm:px-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 transition-colors">
           <input
             type="text"
-            placeholder="Cari motif batik di Indonesia..."
+            placeholder="Cari motif batik..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => {
@@ -183,14 +183,14 @@ const MotifMaps: React.FC = () => {
                 handleSearch();
               }
             }}
-            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent border-none outline-none rounded-lg"
+            className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent border-none outline-none rounded-lg"
           />
           <button
             onClick={handleSearch}
-            className="bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -202,13 +202,13 @@ const MotifMaps: React.FC = () => {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            Cari
+            <span className="hidden sm:inline">Cari</span>
           </button>
         </div>
       </div>
       {!searchQuery && (
-        <div className="absolute top-20 left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xs transition-colors">
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white mb-1">
+        <div className="absolute top-14 sm:top-20 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
+          <h1 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white mb-1">
             Peta Asal Motif Batik
           </h1>
           <p className="text-xs text-gray-600 dark:text-gray-300">
@@ -218,8 +218,8 @@ const MotifMaps: React.FC = () => {
       )}
 
       {searchQuery && filteredMarkers.length > 0 && (
-        <div className="absolute top-20 left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xs transition-colors">
-          <p className="text-sm font-semibold text-gray-800 dark:text-white">
+        <div className="absolute top-14 sm:top-20 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
+          <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white">
             Ditemukan {filteredMarkers.length} motif batik
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
@@ -229,8 +229,8 @@ const MotifMaps: React.FC = () => {
       )}
 
       {searchQuery && filteredMarkers.length === 0 && (
-        <div className="absolute top-20 left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xs border-l-4 border-amber-500 transition-colors">
-          <p className="text-sm font-semibold text-gray-800 dark:text-white">
+        <div className="absolute top-14 sm:top-20 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs border-l-4 border-amber-500 transition-colors">
+          <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white">
             Tidak ditemukan
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
@@ -242,9 +242,10 @@ const MotifMaps: React.FC = () => {
       <MapContainer
         center={mapCenter}
         zoom={mapZoom}
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100vh", width: "100%", zIndex: 0 }}
         className="z-0"
         scrollWheelZoom={true}
+        zoomControl={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | © CARTO'
@@ -263,9 +264,9 @@ const MotifMaps: React.FC = () => {
               },
             }}
           >
-            <Popup>
-              <div className="p-2 min-w-[200px] bg-white dark:bg-gray-800">
-                <h3 className="font-semibold text-gray-800 dark:text-white mb-1">
+            <Popup className="custom-popup">
+              <div className="p-2 min-w-[150px] sm:min-w-[200px] bg-white dark:bg-gray-800">
+                <h3 className="font-semibold text-sm sm:text-base text-gray-800 dark:text-white mb-1">
                   {marker.motif.name}
                 </h3>
                 <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
@@ -285,10 +286,10 @@ const MotifMaps: React.FC = () => {
         ))}
       </MapContainer>
 
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000]">
-        <button className="bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold text-lg flex items-center gap-2 transition-colors">
+      <div className="absolute bottom-3 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-30 md:z-[1000]">
+        <button className="bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg font-semibold text-sm sm:text-lg flex items-center gap-1 sm:gap-2 transition-colors">
           <svg
-            className="w-6 h-6"
+            className="w-4 h-4 sm:w-6 sm:h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -306,15 +307,16 @@ const MotifMaps: React.FC = () => {
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          {searchQuery ? filteredMarkers.length : markers.length} Motif Batik
+          <span className="hidden xs:inline">{searchQuery ? filteredMarkers.length : markers.length} Motif Batik</span>
+          <span className="xs:hidden">{searchQuery ? filteredMarkers.length : markers.length}</span>
         </button>
       </div>
 
       {selectedMotif && (
-        <div className="absolute top-4 right-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto transition-colors">
+        <div className="fixed sm:absolute inset-0 sm:top-4 sm:right-4 sm:inset-auto z-40 md:z-[1000] bg-white dark:bg-gray-800 rounded-none sm:rounded-lg shadow-xl p-4 sm:p-6 max-w-full sm:max-w-sm w-full sm:w-auto h-full sm:h-auto max-h-screen sm:max-h-[80vh] overflow-y-auto transition-colors">
           <button
             onClick={() => setSelectedMotif(null)}
-            className="absolute top-2 right-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+            className="fixed sm:absolute top-4 right-4 sm:top-2 sm:right-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 z-10 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg"
           >
             <svg
               className="w-6 h-6"
@@ -334,18 +336,18 @@ const MotifMaps: React.FC = () => {
           <img
             src={selectedMotif.image}
             alt={selectedMotif.name}
-            className="w-full h-48 object-cover rounded-lg mb-4"
+            className="w-full h-40 sm:h-48 object-cover rounded-lg mb-4"
           />
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-2">
             {selectedMotif.name}
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2">
             <span className="font-semibold">Provinsi:</span> {selectedMotif.province}
           </p>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4">
             <span className="font-semibold">Region:</span> {selectedMotif.region}
           </p>
-          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
+          <p className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm leading-relaxed mb-4">
             {selectedMotif.description}
           </p>
           {selectedMotif.tags && selectedMotif.tags.length > 0 && (
