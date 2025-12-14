@@ -331,10 +331,10 @@ const DetectionPage: React.FC = () => {
       </p>
 
       <div
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition ${
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
           isDragging
             ? "border-amber-500 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30"
-            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-amber-400 dark:hover:border-amber-500"
+            : "bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-gray-100 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-600 hover:shadow-md"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -489,7 +489,7 @@ const DetectionPage: React.FC = () => {
       )}
 
       {result && (
-        <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="mt-8 p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
               {result.prediction}
@@ -526,7 +526,7 @@ const DetectionPage: React.FC = () => {
               </div>
             </div>
           ) : motifData ? (
-            <div className="mb-6 p-5 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+            <div className="mb-6 p-5 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
                 Tentang Motif {motifData.name}
               </h3>
