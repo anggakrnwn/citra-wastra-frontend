@@ -170,6 +170,69 @@ export const userService = {
   },
 };
 
+export const predictionHistoryService = {
+  getAll: (params?: string) => {
+    const url = params ? `/api/predict/admin/history?${params}` : "/api/predict/admin/history";
+    return api.get(url);
+  },
+
+  getImageUrl: (id: string) => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const token = localStorage.getItem("token");
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+    return `${API_BASE_URL}/api/predict/admin/history/${id}/image${tokenParam}`;
+  },
+
+  delete: (id: string) => {
+    return api.delete(`/api/predict/admin/history/${id}`);
+  },
+
+  bulkDelete: (ids: string[]) => {
+    return api.delete("/api/predict/admin/history", { data: { ids } });
+  },
+
+  export: async (format: "json" | "csv") => {
+    const response = await api.get(`/api/predict/admin/history/export?format=${format}`, {
+      responseType: format === "csv" ? "blob" : "json",
+    });
+    
+    if (format === "csv") {
+      const blob = new Blob([response.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = `prediction-history-${Date.now()}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      const dataStr = JSON.stringify(response.data, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `prediction-history-${Date.now()}.json`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    }
+    
+    return response;
+  },
+};
+
 export const uploadService = {
   upload: (formData: FormData) => {
     return api.post("/api/upload", formData, {
