@@ -14,6 +14,7 @@ import { setAuthRedirectCallback } from "./services/api";
 import AdminMotif from "./pages/AdminMotif";
 import AdminUsers from "./pages/AdminUsers";
 import ForbiddenPage from "./pages/ForbiddenPage";
+import CustomCursor from "./components/CustomCursor";
 function App() {
   const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ function App() {
   return (
     <ThemeProvider>
       <WastraContextProvider>
+        <CustomCursor />
         <Routes>
         <Route element={<MainLayout />}>
           {/* PUBLIC */}
