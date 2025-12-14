@@ -13,6 +13,7 @@ import DetectionWrapper from "./pages/DetectionWrapper";
 import { setAuthRedirectCallback } from "./services/api";
 import AdminMotif from "./pages/AdminMotif";
 import AdminUsers from "./pages/AdminUsers";
+import AdminPredictionHistory from "./pages/AdminPredictionHistory";
 import ForbiddenPage from "./pages/ForbiddenPage";
 import CustomCursor from "./components/CustomCursor";
 function App() {
@@ -66,6 +67,15 @@ function App() {
           element={
             <ProtectedRoute adminOnly>
               <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/prediction-history"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminPredictionHistory />
             </ProtectedRoute>
           }
         />

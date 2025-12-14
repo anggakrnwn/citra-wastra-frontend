@@ -18,7 +18,8 @@ const NavLinks: React.FC<NavlinksProps> = ({ onClick, mobile, userRole }) => {
 
   const adminNavItems = [
     { name: "Motif Management", path: "/admin/motifs" },
-    { name: "User Management", path: "/admin/users" }
+    { name: "User Management", path: "/admin/users" },
+    { name: "Prediction History", path: "/admin/prediction-history" }
   ];
 
   if (mobile) {
