@@ -34,6 +34,16 @@
   100% { transform: translateY(0); }
 }
 
+/* Animasi floating cards dengan rotasi */
+@keyframes floatUpDown {
+  0%, 100% {
+    transform: translateY(0) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-25px) rotate(var(--rotate, 0deg));
+  }
+}
+
 /* Classes utilitas animasi */
 @layer utilities {
   .animate-slide-in-left {
@@ -133,5 +143,92 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* Leaflet Map Responsive Styles */
+.leaflet-container {
+  height: 100vh;
+  width: 100%;
+  z-index: 0;
+}
+
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  padding: 0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+.dark .leaflet-popup-tip {
+  background: #1f2937;
+}
+
+.custom-popup .leaflet-popup-content {
+  min-width: 180px;
+  max-width: 280px;
+}
+
+@media (min-width: 640px) {
+  .custom-popup .leaflet-popup-content {
+    min-width: 220px;
+    max-width: 320px;
+  }
+}
+
+.leaflet-popup-close-button {
+  color: #6b7280 !important;
+  font-size: 20px !important;
+  padding: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 1 !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #374151 !important;
+}
+
+.dark .leaflet-popup-close-button {
+  color: #9ca3af !important;
+}
+
+.dark .leaflet-popup-close-button:hover {
+  color: #d1d5db !important;
+}
+
+.leaflet-control-zoom {
+  margin-top: 10px !important;
+  margin-right: 10px !important;
+}
+
+@media (max-width: 640px) {
+  .leaflet-control-zoom {
+    margin-top: 80px !important;
+  }
+  
+  .leaflet-control-zoom a {
+    width: 30px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    font-size: 18px !important;
+  }
+
+  .custom-popup .leaflet-popup-content {
+    min-width: 160px;
+    max-width: 240px;
   }
 }

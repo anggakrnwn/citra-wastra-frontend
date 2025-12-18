@@ -10,7 +10,7 @@ import { Toaster } from "react-hot-toast";
 
 const Home = () => {
   return (
-    <div>
+    <div className="bg-white dark:bg-gray-900 transition-colors min-h-screen">
         <ScrollToTop />
         <Navbar />
         <Toaster position="top-center" />

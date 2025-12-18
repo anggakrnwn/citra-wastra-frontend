@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { userService } from "@/services/api";
 
 interface User {
   id: string;
@@ -31,14 +32,10 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
-  const token = localStorage.getItem("token");
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await userService.getAll();
 
       const data = Array.isArray(res.data)
         ? res.data
@@ -52,16 +49,12 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const updateRole = async (id: string, role: "user" | "admin") => {
     setUpdating(id);
     try {
-      await axios.patch(
-        `/api/users/${id}/role`,
-        { role },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await userService.updateRole(id, role);
 
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, role } : u))
@@ -81,11 +74,11 @@ const AdminUsers = () => {
   }, [fetchUsers]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-white dark:bg-gray-900 min-h-screen transition-colors">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen User</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manajemen User</h1>
+          <p className="text-sm text-muted-foreground dark:text-gray-400">
             Total user: {users.length}
           </p>
         </div>
@@ -120,7 +113,7 @@ const AdminUsers = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </span>
                   <Select
@@ -143,7 +136,7 @@ const AdminUsers = () => {
             </Card>
           ))
         ) : (
-          <p className="text-gray-500 text-center">Tidak ada user ditemukan</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center">Tidak ada user ditemukan</p>
         )}
       </div>
     </div>

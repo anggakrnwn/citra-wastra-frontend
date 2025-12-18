@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { motion } from "framer-motion";
 import flowImage from "../assets/images/wastraproses.png";
 import kamera from "../assets/icons/camera.svg";
 import insight from "../assets/icons/insight.svg";
@@ -8,80 +9,120 @@ import catatan from "../assets/icons/catatan.svg";
 const prosesList = [
   {
     title: "Capture or Upload",
-    desc: "Take a photo of the batik using your camera or upload one from your device’s gallery.",
-    icon: <img src={kamera} alt="kamera" className="text-amber-600 w-8 h-8" />,
+    desc: "Take a photo of the batik using your camera or upload one from your device's gallery.",
+    icon: kamera,
+    label: "kamera",
   },
   {
     title: "Pattern Recognition",
-    desc: "The AI analyzes the batik’s motifs using machine learning to identify shapes, colors, and unique characteristics.",
-    icon: <img src={insight} alt="insight" className="text-amber-600 w-8 h-8" />,
+    desc: "The AI analyzes the batik's motifs using machine learning to identify shapes, colors, and unique characteristics.",
+    icon: insight,
+    label: "insight",
   },
   {
     title: "Origin Identification",
-    desc: "The system matches the analysis results with its database to determine the batik’s region of origin and motif type.",
-    icon: <img src={lokasi} alt="lokasi" className="text-amber-600 w-8 h-8" />,
+    desc: "The system matches the analysis results with its database to determine the batik's region of origin and motif type.",
+    icon: lokasi,
+    label: "lokasi",
   },
   {
     title: "Cultural Insight",
     desc: "Receive detailed information about the history, philosophy, and cultural meaning behind the detected batik motif.",
-    icon: <img src={catatan} alt="budaya" className="text-amber-600 w-8 h-8" />,
+    icon: catatan,
+    label: "budaya",
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
+
 const WastraProses: React.FC = () => {
-  const [active, setActive] = useState<number | null>(null);
-
-  const toggleItem = (index: number) => {
-    setActive(active === index ? null : index);
-  };
-
   return (
-    <section className="bg-white py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        <div>
-          <h2 className="text-h2 font-bold text-gray-800 mb-6">
-            Uncover the Story Behind Every Batik
+    <section className="bg-white dark:bg-gray-900 py-16 md:py-24 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12 md:mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            How It Works
           </h2>
-          <p className="text-body-lg text-gray-600 mb-8">
-            With Citra Wastra, every piece of batik is more than just a pattern.
-            Our technology helps you recognize its motifs, trace its regional
-            origin, and reveal the cultural meaning woven into its design all in
-            just seconds.
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Discover the origin, pattern, and cultural meaning of your batik in seconds
           </p>
+        </motion.div>
 
-          <div className="space-y-4">
-            {prosesList.map((item, i) => {
-              const isActive = active === i;
-              return (
-                <div key={i} className="border border-gray-200 rounded-lg">
-                  <button
-                    className="w-full flex justify-between items-center p-4 cursor-pointer hover:border-amber-600 transition"
-                    onClick={() => toggleItem(i)}
-                    aria-expanded={isActive}
-                  >
-                    <div className="flex items-center gap-3">
-                      {item.icon}
-                      <h3 className="font-semibold text-subheading text-gray-800">
-                        {item.title}
-                      </h3>
-                    </div>
-                    <span className="text-lg">{isActive ? "−" : "+"}</span>
-                  </button>
-                  {isActive && (
-                    <p className="px-4 pb-4 text-body text-gray-600">{item.desc}</p>
-                  )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Steps Section */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={containerVariants}
+            className="space-y-6"
+          >
+            {prosesList.map((item, index) => (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                className="flex gap-5 bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-100 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-600 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center shadow-sm">
+                    <img 
+                      src={item.icon} 
+                      alt={item.label} 
+                      className="w-7 h-7"
+                    />
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                <div className="flex-1 pt-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
-        <div className="flex justify-center">
-          <img
-            src={flowImage}
-            alt="Citra Wastra Process Flow"
-            className="max-w-xs md:max-w-md"
-          />
+          {/* Image Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-center items-center"
+          >
+            <img
+              src={flowImage}
+              alt="Citra Wastra Process Flow"
+              className="w-full max-w-md rounded-lg"
+            />
+          </motion.div>
         </div>
       </div>
     </section>

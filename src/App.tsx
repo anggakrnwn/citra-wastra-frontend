@@ -2,9 +2,10 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import Home from "./pages/Home";
 import { WastraContextProvider } from "./context/WastraContextProvider";
+import { ThemeProvider } from "./context/ThemeContext";
 import GalleryPage from "./pages/MotifExplorer";
 import About from "./pages/About";
-import WastraQuiz from "./pages/WastraQuiz";
+import MotifMaps from "./pages/MotifMaps";
 import AuthPage from "./pages/AuthPage";
 import MainLayout from "./components/layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -12,7 +13,9 @@ import DetectionWrapper from "./pages/DetectionWrapper";
 import { setAuthRedirectCallback } from "./services/api";
 import AdminMotif from "./pages/AdminMotif";
 import AdminUsers from "./pages/AdminUsers";
+import AdminPredictionHistory from "./pages/AdminPredictionHistory";
 import ForbiddenPage from "./pages/ForbiddenPage";
+import CustomCursor from "./components/CustomCursor";
 function App() {
   const navigate = useNavigate();
 
@@ -21,8 +24,10 @@ function App() {
   }, [navigate]);
 
   return (
-    <WastraContextProvider>
-      <Routes>
+    <ThemeProvider>
+      <WastraContextProvider>
+        <CustomCursor />
+        <Routes>
         <Route element={<MainLayout />}>
           {/* PUBLIC */}
           <Route path="/" element={<Home />} />
@@ -39,10 +44,10 @@ function App() {
             }
           />
           <Route
-            path="/WastraQuiz"
+            path="/maps"
             element={
               <ProtectedRoute>
-                <WastraQuiz />
+                <MotifMaps />
               </ProtectedRoute>
             }
           />
@@ -66,11 +71,21 @@ function App() {
           }
         />
 
+        <Route
+          path="/admin/prediction-history"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminPredictionHistory />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/forbidden" element={<ForbiddenPage />} />
 
         <Route path="/login" element={<AuthPage />} />
       </Routes>
-    </WastraContextProvider>
+      </WastraContextProvider>
+    </ThemeProvider>
   );
 }
 
