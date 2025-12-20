@@ -176,6 +176,8 @@ const AdminLayout: React.FC = () => {
             }
 
             // Render menu item
+            if (!item.path) return null;
+            
             return (
               <NavLink
                 key={item.path}
@@ -209,7 +211,7 @@ const AdminLayout: React.FC = () => {
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center">
-                <span className="text-white font-semibold">{getUserInitial(user?.name)}</span>
+                <span className="text-white font-semibold">{getUserInitial(user?.name || undefined)}</span>
               </div>
             )}
             <div className="flex-1 min-w-0">
