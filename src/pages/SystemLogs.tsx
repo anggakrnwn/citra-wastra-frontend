@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
-import { Search, Filter, RefreshCw, Copy, Check } from "lucide-react";
+import { Search, RefreshCw, Copy, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -79,7 +79,7 @@ const SystemLogs = () => {
         setPagination(res.data.pagination || pagination);
       }
     } catch (err) {
-      const error = err as AxiosError;
+      const error = err as AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || "Failed to fetch activity logs");
     } finally {
       setLoading(false);

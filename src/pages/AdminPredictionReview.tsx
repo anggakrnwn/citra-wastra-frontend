@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
-import { CheckCircle2, XCircle, Search, Download, Filter } from "lucide-react";
+import { CheckCircle2, XCircle, Search, Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -80,7 +80,7 @@ const AdminPredictionReview = () => {
         setPagination(res.data.pagination || pagination);
       }
     } catch (err) {
-      const error = err as AxiosError;
+      const error = err as AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || "Failed to fetch predictions");
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ const AdminPredictionReview = () => {
       fetchPredictions();
       setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
     } catch (err) {
-      const error = err as AxiosError;
+      const error = err as AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || `Failed to ${status} prediction`);
     } finally {
       setReviewing(null);
@@ -138,7 +138,7 @@ const AdminPredictionReview = () => {
       fetchPredictions();
       setSelectedIds([]);
     } catch (err) {
-      const error = err as AxiosError;
+      const error = err as AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || "Failed to batch review predictions");
     } finally {
       setBatchReviewing(false);
