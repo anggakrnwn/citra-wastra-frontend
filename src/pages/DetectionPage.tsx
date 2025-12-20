@@ -322,10 +322,11 @@ const DetectionPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-center mb-4 text-gray-800 dark:text-white">
-        Batik Motif Detection
-      </h1>
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 className="text-3xl font-bold text-center mb-4 text-gray-800 dark:text-white">
+          Batik Motif Detection
+        </h1>
       <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-8">
         Upload your batik photo and let our AI recognize its motif and origin.
       </p>
@@ -589,6 +590,7 @@ const DetectionPage: React.FC = () => {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -135,8 +135,9 @@ export const authService = {
 };
 
 export const motifService = {
-  getAll: () => {
-    return api.get("/api/motifs");
+  getAll: (params?: string) => {
+    const url = params ? `/api/motifs?${params}` : "/api/motifs";
+    return api.get(url);
   },
 
   create: (formData: FormData) => {
@@ -161,12 +162,42 @@ export const motifService = {
 };
 
 export const userService = {
-  getAll: () => {
-    return api.get("/api/users");
+  getAll: (params?: string) => {
+    const url = params ? `/api/users?${params}` : "/api/users";
+    return api.get(url);
+  },
+
+  create: (name: string, email: string, password: string, role: string) => {
+    return api.post("/api/users", { name, email, password, role });
   },
 
   updateRole: (id: string, role: string) => {
     return api.patch(`/api/users/${id}/role`, { role });
+  },
+
+  delete: (id: string) => {
+    return api.delete(`/api/users/${id}`);
+  },
+
+  updatePassword: (id: string, password: string) => {
+    return api.patch(`/api/users/${id}/password`, { password });
+  },
+
+  // User profile endpoints
+  getProfile: () => {
+    return api.get("/api/users/me");
+  },
+
+  changePassword: (currentPassword: string | undefined, newPassword: string) => {
+    return api.patch("/api/users/me/password", { currentPassword, newPassword });
+  },
+
+  updateProfilePicture: (profilePicture: string) => {
+    return api.post("/api/users/me/profile-picture", { profilePicture });
+  },
+
+  updateProfile: (name?: string) => {
+    return api.patch("/api/users/me", { name });
   },
 };
 
@@ -240,6 +271,75 @@ export const uploadService = {
         "Content-Type": "multipart/form-data",
       },
     });
+  },
+};
+
+export const predictionReviewService = {
+  getForReview: (params?: string) => {
+    const url = params ? `/api/predict/review?${params}` : "/api/predict/review";
+    return api.get(url);
+  },
+
+  review: (id: string, status: "approved" | "rejected", reviewNotes?: string) => {
+    return api.patch(`/api/predict/${id}/review`, { status, reviewNotes });
+  },
+
+  batchReview: (ids: string[], status: "approved" | "rejected", reviewNotes?: string) => {
+    return api.patch("/api/predict/batch/review", { ids, status, reviewNotes });
+  },
+};
+
+export const statsService = {
+  getAdminStats: () => {
+    return api.get("/api/stats/admin");
+  },
+
+  getSystemStats: () => {
+    return api.get("/api/stats/system");
+  },
+};
+
+export const exportService = {
+  exportMotifs: (format: "csv" | "json" = "csv") => {
+    return api.get(`/api/export/motifs?format=${format}`, { responseType: "blob" });
+  },
+
+  exportPredictions: (format: "csv" | "json" = "csv", filters?: { status?: string; startDate?: string; endDate?: string }) => {
+    const params = new URLSearchParams({ format });
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.startDate) params.append("startDate", filters.startDate);
+    if (filters?.endDate) params.append("endDate", filters.endDate);
+    return api.get(`/api/export/predictions?${params.toString()}`, { responseType: "blob" });
+  },
+};
+
+export const activityLogsService = {
+  getAll: (params?: string) => {
+    const url = params ? `/api/logs?${params}` : "/api/logs";
+    return api.get(url);
+  },
+};
+
+export const settingsService = {
+  getAll: (category?: string) => {
+    const url = category ? `/api/settings?category=${category}` : "/api/settings";
+    return api.get(url);
+  },
+
+  getByKey: (key: string) => {
+    return api.get(`/api/settings/${key}`);
+  },
+
+  update: (key: string, value: string, description?: string) => {
+    return api.put(`/api/settings/${key}`, { value, description });
+  },
+
+  batchUpdate: (settings: Array<{ key: string; value: string; category?: string; description?: string }>) => {
+    return api.put("/api/settings", { settings });
+  },
+
+  delete: (key: string) => {
+    return api.delete(`/api/settings/${key}`);
   },
 };
 

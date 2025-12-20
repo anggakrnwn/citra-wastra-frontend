@@ -15,8 +15,17 @@ const Navbar: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
-  const UserAvatar = ({ name }: { name?: string }) => {
-    const initial = name?.charAt(0).toUpperCase() || "U";
+  const UserAvatar = ({ name, profilePicture, email }: { name?: string | null; profilePicture?: string | null; email?: string }) => {
+    if (profilePicture) {
+      return (
+        <img
+          src={profilePicture}
+          alt={name || "User"}
+          className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+        />
+      );
+    }
+    const initial = name?.charAt(0).toUpperCase() || email?.charAt(0).toUpperCase() || "U";
     return (
       <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{initial}</span>
@@ -124,8 +133,13 @@ const Navbar: React.FC = () => {
               
               {user ? (
                 <>
-                  <span className="text-gray-700 dark:text-gray-300">{user.name}</span>
-                  <UserAvatar name={user.name} />
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <UserAvatar name={user.name} profilePicture={user.profilePicture} email={user.email} />
+                    <span className="text-gray-700 dark:text-gray-300">{user.name}</span>
+                  </Link>
                   <button
                     onClick={() => setShowConfirm(true)}
                     disabled={loggingOut}
@@ -262,10 +276,17 @@ const Navbar: React.FC = () => {
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               {user ? (
                 <div className="flex flex-col bg-gray-50 dark:bg-gray-800 rounded-xl p-3 shadow-sm gap-3">
-                  <div className="flex items-center gap-3">
-                    <UserAvatar name={user.name} />
-                    <p className="font-semibold text-gray-800 dark:text-gray-200">{user.name}</p>
-                  </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 -m-2 transition-colors"
+                  >
+                    <UserAvatar name={user.name} profilePicture={user.profilePicture} email={user.email} />
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800 dark:text-gray-200">{user.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">View Profile</p>
+                    </div>
+                  </Link>
                   <button
                     onClick={() => setShowConfirm(true)}
                     disabled={loggingOut}
