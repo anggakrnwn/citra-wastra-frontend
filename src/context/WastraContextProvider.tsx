@@ -202,14 +202,15 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // Clear all localStorage items
+    localStorage.clear();
+    sessionStorage.clear();
     setToken(null);
     setUser(null);
   };
 
   return (
-    <WastraContext.Provider value={{ user, loading, token, login, register, loginWithGoogle, logout }}>
+    <WastraContext.Provider value={{ user, loading, token, setUser, login, register, loginWithGoogle, logout }}>
       {children}
     </WastraContext.Provider>
   );

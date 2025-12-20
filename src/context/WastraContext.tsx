@@ -3,14 +3,16 @@ import { createContext, useContext } from "react";
 export interface User {
   id: string;
   email: string;
-  name: string;
+  name: string | null;
+  profilePicture?: string | null;
   role: string;
 }
 
 interface WastraContextType {
   user: User | null;
   loading: boolean;
-  token: string | null; 
+  token: string | null;
+  setUser?: (user: User | null) => void;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; message?: string }>;
