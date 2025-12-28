@@ -99,11 +99,8 @@ const AdminUsers = () => {
     try {
       await userService.updateRole(id, role);
 
-      // Update local state for immediate UI feedback
-      setUsers((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, role } : u))
-      );
-
+      // Refresh users list to get latest data from server
+      await fetchUsers();
       toast.success("Role updated successfully");
     } catch (err) {
       const error = err as AxiosError<ApiError>;

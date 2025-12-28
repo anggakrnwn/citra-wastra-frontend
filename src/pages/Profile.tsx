@@ -56,12 +56,19 @@ const Profile = () => {
         setProfile(userData as UserProfile);
         
         if (setUser && user) {
-          setUser({ ...user, profilePicture: userData.profilePicture || null });
+          setUser({ 
+            ...user, 
+            name: userData.name || user.name,
+            email: userData.email || user.email,
+            profilePicture: userData.profilePicture || null,
+          });
         }
         
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
           const userDataLocal = JSON.parse(savedUser);
+          userDataLocal.name = userData.name || userDataLocal.name;
+          userDataLocal.email = userData.email || userDataLocal.email;
           userDataLocal.profilePicture = userData.profilePicture || null;
           localStorage.setItem("user", JSON.stringify(userDataLocal));
         }
@@ -83,20 +90,33 @@ const Profile = () => {
       const res = await userService.updateProfile(nameValue.trim() || undefined);
       if (res.data && res.data.success) {
         const updatedUser = res.data.user;
-        setProfile((prev) => (prev ? { ...prev, name: updatedUser.name } : null));
+        setProfile((prev) => (prev ? { 
+          ...prev, 
+          name: updatedUser.name,
+          profilePicture: updatedUser.profilePicture || prev.profilePicture,
+        } : null));
         
         if (setUser && user) {
-          setUser({ ...user, name: updatedUser.name });
+          setUser({ 
+            ...user, 
+            name: updatedUser.name,
+            profilePicture: updatedUser.profilePicture || user.profilePicture,
+          });
         }
 
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
           const userData = JSON.parse(savedUser);
           userData.name = updatedUser.name;
+          userData.profilePicture = updatedUser.profilePicture || userData.profilePicture;
           localStorage.setItem("user", JSON.stringify(userData));
         }
 
         toast.success("Name updated successfully");
+        
+        setTimeout(() => {
+          fetchProfile();
+        }, 500);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update name");
