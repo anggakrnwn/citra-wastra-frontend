@@ -29,10 +29,17 @@ export function setAuthRedirectCallback(callback: (path: string) => void) {
   authRedirectCallback = callback;
 }
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth errors and maintenance mode
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle maintenance mode (503)
+    if (error.response?.status === 503 && error.response?.data?.maintenance) {
+      // Don't redirect for maintenance mode, just show the error message
+      // The error will be handled by the component
+      return Promise.reject(error);
+    }
+    
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -60,6 +67,11 @@ const retryRequest = async <T>(
       return await requestFn();
     } catch (error: any) {
       lastError = error;
+      
+      // Don't retry if it's maintenance mode (503 with maintenance flag)
+      if (error.response?.status === 503 && error.response?.data?.maintenance === true) {
+        throw error;
+      }
       
       const shouldRetry = 
         error.response?.status === 503 ||
@@ -131,6 +143,10 @@ export const authService = {
 
   googleAuth: (idToken: string, name: string, email: string, photoURL?: string) => {
     return api.post("/api/auth/google", { idToken, name, email, photoURL });
+  },
+
+  logout: () => {
+    return api.post("/api/auth/logout");
   },
 };
 
@@ -330,8 +346,8 @@ export const settingsService = {
     return api.get(`/api/settings/${key}`);
   },
 
-  update: (key: string, value: string, description?: string) => {
-    return api.put(`/api/settings/${key}`, { value, description });
+  update: (key: string, value: string, description?: string, category?: string) => {
+    return api.put(`/api/settings/${key}`, { value, description, category });
   },
 
   batchUpdate: (settings: Array<{ key: string; value: string; category?: string; description?: string }>) => {

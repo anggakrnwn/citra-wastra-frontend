@@ -49,6 +49,8 @@ const SystemLogs = () => {
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 100,
@@ -56,8 +58,10 @@ const SystemLogs = () => {
     totalPages: 0,
   });
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
+  const fetchLogs = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
@@ -77,19 +81,39 @@ const SystemLogs = () => {
       if (res.data && res.data.success) {
         setLogs(res.data.data || []);
         setPagination(res.data.pagination || pagination);
+        setLastUpdated(new Date());
       }
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to fetch activity logs");
+      if (!silent) {
+        toast.error(error.response?.data?.message || "Failed to fetch activity logs");
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [pagination.page, pagination.limit, actionFilter, entityTypeFilter]);
 
+  // Initial fetch
   useEffect(() => {
     fetchLogs();
-  }, [fetchLogs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, pagination.limit, actionFilter, entityTypeFilter]);
+
+  // Auto-refresh every 15 seconds when autoRefresh is enabled
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      // Only auto-refresh if we're on page 1 (to avoid disrupting pagination)
+      if (pagination.page === 1) {
+        fetchLogs(true); // Silent refresh
+      }
+    }, 15000); // 15 seconds
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh, pagination.page]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -159,26 +183,41 @@ const SystemLogs = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">System Activity Logs</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">System Activity Logs</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Monitor all system activities and user actions
           </p>
+          {lastUpdated && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+              {autoRefresh && " (Auto-refresh every 15s)"}
+            </p>
+          )}
         </div>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant={autoRefresh ? "default" : "outline"}
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={autoRefresh ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}
+          >
+            {autoRefresh ? "Auto: ON" : "Auto: OFF"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 flex-1 sm:flex-none"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -192,37 +231,39 @@ const SystemLogs = () => {
                        outline-none transition"
           />
         </div>
-        <Select
-          value={actionFilter}
-          onValueChange={setActionFilter}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by action" />
-          </SelectTrigger>
-          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <SelectItem value="all">All Actions</SelectItem>
-            <SelectItem value="create">Create</SelectItem>
-            <SelectItem value="update">Update</SelectItem>
-            <SelectItem value="delete">Delete</SelectItem>
-            <SelectItem value="login">Login</SelectItem>
-            <SelectItem value="logout">Logout</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={entityTypeFilter}
-          onValueChange={setEntityTypeFilter}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by entity" />
-          </SelectTrigger>
-          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <SelectItem value="all">All Entities</SelectItem>
-            <SelectItem value="user">User</SelectItem>
-            <SelectItem value="motif">Motif</SelectItem>
-            <SelectItem value="prediction">Prediction</SelectItem>
-            <SelectItem value="system">System</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select
+            value={actionFilter}
+            onValueChange={setActionFilter}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by action" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <SelectItem value="all">All Actions</SelectItem>
+              <SelectItem value="create">Create</SelectItem>
+              <SelectItem value="update">Update</SelectItem>
+              <SelectItem value="delete">Delete</SelectItem>
+              <SelectItem value="login">Login</SelectItem>
+              <SelectItem value="logout">Logout</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={entityTypeFilter}
+            onValueChange={setEntityTypeFilter}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by entity" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <SelectItem value="all">All Entities</SelectItem>
+              <SelectItem value="user">User</SelectItem>
+              <SelectItem value="motif">Motif</SelectItem>
+              <SelectItem value="prediction">Prediction</SelectItem>
+              <SelectItem value="system">System</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Logs List */}

@@ -9,6 +9,7 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Disable body scroll when modal is open
   useEffect(() => {
@@ -153,8 +154,20 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-40">
+      <div
+        className={`fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
+      >
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-700">
           <img src={wastralogo} alt="Citra Wastra Logo" className="h-8 w-auto" />
@@ -264,16 +277,26 @@ const AdminLayout: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <div className="ml-64">
+      <div className="lg:ml-64">
         {/* Top Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 sticky top-0 z-30">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Toggle menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
               {getRoleLabel(user?.role)} Dashboard
             </h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <div className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">
               {new Date().toLocaleDateString("id-ID", {
                 day: "numeric",
                 month: "short",
@@ -284,7 +307,7 @@ const AdminLayout: React.FC = () => {
         </header>
 
         {/* Content Area */}
-        <main className="p-6">
+        <main className="p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
