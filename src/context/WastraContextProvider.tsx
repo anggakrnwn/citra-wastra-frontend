@@ -49,12 +49,34 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
       return { success: false, message: "Login failed: no token received" };
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
+        // Handle maintenance mode (503)
+        if (error.response?.status === 503 && error.response?.data?.maintenance) {
+          return {
+            success: false,
+            message: error.response?.data?.message || "Sistem sedang dalam tahap maintenance. Silakan coba lagi nanti.",
+          };
+        }
+        
+        // Handle rate limit error (429)
+        if (error.response?.status === 429) {
+          return {
+            success: false,
+            message: "Too many login attempts. Please wait a few minutes before trying again.",
+          };
+        }
+        
+        // Handle other errors
+        const errorMessage = error.response?.data?.message || 
+                            error.response?.data?.error ||
+                            error.message ||
+                            "Login failed";
+        
         return {
           success: false,
-          message: error.response?.data?.message || "Login failed",
+          message: errorMessage,
         };
       }
-      return { success: false, message: "Login failed" };
+      return { success: false, message: "Login failed: Network error or server unavailable" };
     }
   };
 
@@ -201,12 +223,20 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
     });
   };
 
-  const logout = () => {
-    // Clear all localStorage items
-    localStorage.clear();
-    sessionStorage.clear();
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Call logout API to log the activity
+      await authService.logout();
+    } catch (error) {
+      // Even if API call fails, still proceed with logout
+      console.error("Logout API call failed:", error);
+    } finally {
+      // Clear all localStorage items
+      localStorage.clear();
+      sessionStorage.clear();
+      setToken(null);
+      setUser(null);
+    }
   };
 
   return (

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Save, RefreshCw, Settings as SettingsIcon } from "lucide-react";
+import { useWastra } from "@/context/WastraContext";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,21 +29,30 @@ interface SettingsData {
 }
 
 const Settings = () => {
+  const { user } = useWastra();
   const [settings, setSettings] = useState<SettingsData>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  
+  // Refs to store current input values
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    // Fetch settings when component mounts or when user changes
+    if (user && (user.role === "super_admin" || user.role === "admin")) {
+      fetchSettings();
+    }
+  }, [user]);
 
   const fetchSettings = async () => {
     setLoading(true);
     try {
       const res = await settingsService.getAll();
       if (res.data && res.data.success) {
-        setSettings(res.data.data || {});
+        const newSettings = res.data.data || {};
+        setSettings(newSettings);
+        
       }
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
@@ -53,14 +63,67 @@ const Settings = () => {
   };
 
   const handleSave = async (key: string, value: string, description?: string) => {
+    // Prevent multiple simultaneous saves
+    if (saving) {
+      toast.error("Please wait for the current save to complete");
+      return;
+    }
+    
+    // Get the actual current value from the input field if available
+    const inputElement = inputRefs.current[key];
+    const currentValue = inputElement?.value || value;
+    
+    // Don't save if value is empty
+    if (!currentValue || !currentValue.trim()) {
+      toast.error("Value cannot be empty");
+      return;
+    }
+    
     setSaving(key);
     try {
-      await settingsService.update(key, value, description);
-      toast.success("Setting updated successfully");
-      fetchSettings();
+      // Normalize key to uppercase (backend expects uppercase)
+      const normalizedKey = key.toUpperCase().trim();
+      
+      // Determine category from key
+      let category = "general";
+      if (normalizedKey.includes("ML_SERVICE") || normalizedKey.includes("TIMEOUT")) {
+        category = "ml_service";
+      } else if (normalizedKey.includes("RAILWAY")) {
+        category = "railway";
+      } else if (normalizedKey.includes("VERCEL")) {
+        category = "vercel";
+      }
+      
+      // Send category to backend to ensure it's saved correctly
+      const response = await settingsService.update(normalizedKey, currentValue.trim(), description || undefined, category);
+      
+      if (response.data && response.data.success && response.data.data) {
+        updateLocalSetting(category, normalizedKey, currentValue.trim());
+        
+        toast.success("Setting updated successfully");
+        
+        // Refetch after a short delay to sync with server (avoid rate limit)
+        setTimeout(async () => {
+          await fetchSettings();
+        }, 500);
+      } else {
+        throw new Error("Failed to save setting: Invalid response from server");
+      }
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to update setting");
+      const errorMessage = error.response?.data?.message || "Failed to update setting";
+      
+      // Check if it's a rate limit error
+      if (error.response?.status === 429 || errorMessage.toLowerCase().includes("too many")) {
+        toast.error("Too many requests. Please wait a moment before trying again.");
+      } else {
+        toast.error(errorMessage);
+      }
+      
+      // Only refetch on error to restore correct state (with delay to avoid rate limit)
+      setTimeout(() => {
+        fetchSettings();
+      }, 1000);
     } finally {
       setSaving(null);
     }
@@ -68,14 +131,58 @@ const Settings = () => {
 
 
   const getSettingValue = (category: string, key: string): string => {
-    return settings[category]?.find((s) => s.key === key)?.value || "";
+    const normalizedKey = key.toUpperCase().trim();
+    const categorySettings = settings[category] || [];
+    const setting = categorySettings.find((s) => s.key.toUpperCase() === normalizedKey);
+    
+    if (setting) {
+      return setting.value || "";
+    }
+    
+    // Fallback: search in all categories if not found in specified category
+    for (const cat in settings) {
+      const found = settings[cat]?.find((s) => s.key.toUpperCase() === normalizedKey);
+      if (found) {
+        return found.value || "";
+      }
+    }
+    
+    return "";
   };
 
   const updateLocalSetting = (category: string, key: string, value: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      [category]: prev[category]?.map((s) => (s.key === key ? { ...s, value } : s)) || [],
-    }));
+    setSettings((prev) => {
+      const categorySettings = prev[category] || [];
+      const existingIndex = categorySettings.findIndex((s) => s.key === key);
+      
+      if (existingIndex >= 0) {
+        // Update existing setting
+        const updated = [...categorySettings];
+        updated[existingIndex] = { ...updated[existingIndex], value };
+        return {
+          ...prev,
+          [category]: updated,
+        };
+      } else {
+        // Add new setting
+        return {
+          ...prev,
+          [category]: [
+            ...categorySettings,
+            {
+              id: `temp-${key}`,
+              key,
+              value,
+              category,
+              description: null,
+              updatedBy: null,
+              updatedAt: new Date().toISOString(),
+              updatedByUser: null,
+            },
+          ],
+        };
+      }
+    });
   };
 
   if (loading) {
@@ -89,25 +196,25 @@ const Settings = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             Manage system configurations and deployment settings
           </p>
         </div>
-        <Button onClick={fetchSettings} variant="outline" className="border-gray-200 dark:border-gray-700">
+        <Button onClick={fetchSettings} variant="outline" className="border-gray-200 dark:border-gray-700 w-full sm:w-auto">
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
         </Button>
       </div>
 
       {/* ML Service Settings */}
-      <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+      <Card className="p-4 sm:p-6 bg-transparent border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-4">
           <SettingsIcon className="w-5 h-5 mr-2 text-amber-600 dark:text-amber-500" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">ML Service</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">ML Service</h2>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Configure Machine Learning model service endpoint and settings
@@ -120,20 +227,37 @@ const Settings = () => {
             </label>
             <input
               id="ml_service_url"
-              type="url"
+              ref={(el) => {
+                inputRefs.current["ML_SERVICE_URL"] = el;
+              }}
+              type="text"
               value={getSettingValue("ml_service", "ML_SERVICE_URL")}
-              onChange={(e) => updateLocalSetting("ml_service", "ML_SERVICE_URL", e.target.value)}
+              onChange={(e) => {
+                updateLocalSetting("ml_service", "ML_SERVICE_URL", e.target.value);
+              }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pastedText = e.clipboardData.getData("text");
+                updateLocalSetting("ml_service", "ML_SERVICE_URL", pastedText);
+                // Also update the input element directly
+                if (inputRefs.current["ML_SERVICE_URL"]) {
+                  inputRefs.current["ML_SERVICE_URL"].value = pastedText;
+                }
+              }}
               placeholder="https://your-ml-service.example.com"
+              autoComplete="off"
               className="mt-1 w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <Button
-              onClick={() =>
+              onClick={() => {
+                // Get value directly from input field
+                const inputValue = inputRefs.current["ML_SERVICE_URL"]?.value || getSettingValue("ml_service", "ML_SERVICE_URL");
                 handleSave(
                   "ML_SERVICE_URL",
-                  getSettingValue("ml_service", "ML_SERVICE_URL"),
+                  inputValue,
                   "Machine Learning service endpoint URL"
-                )
-              }
+                );
+              }}
               disabled={saving === "ML_SERVICE_URL"}
               className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
               size="sm"
@@ -189,7 +313,7 @@ const Settings = () => {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Backend Service</h2>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Backend API and ML model service endpoint configuration
+          Backend API service endpoint configuration
         </p>
 
         <div className="space-y-4">
@@ -199,20 +323,37 @@ const Settings = () => {
             </label>
             <input
               id="railway_backend_url"
-              type="url"
+              ref={(el) => {
+                inputRefs.current["RAILWAY_BACKEND_URL"] = el;
+              }}
+              type="text"
               value={getSettingValue("railway", "RAILWAY_BACKEND_URL")}
-              onChange={(e) => updateLocalSetting("railway", "RAILWAY_BACKEND_URL", e.target.value)}
+              onChange={(e) => {
+                updateLocalSetting("railway", "RAILWAY_BACKEND_URL", e.target.value);
+              }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pastedText = e.clipboardData.getData("text");
+                updateLocalSetting("railway", "RAILWAY_BACKEND_URL", pastedText);
+                // Also update the input element directly
+                if (inputRefs.current["RAILWAY_BACKEND_URL"]) {
+                  inputRefs.current["RAILWAY_BACKEND_URL"].value = pastedText;
+                }
+              }}
               placeholder="https://your-backend-api.example.com"
+              autoComplete="off"
               className="mt-1 w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <Button
-              onClick={() =>
+              onClick={() => {
+                // Get value directly from input field
+                const inputValue = inputRefs.current["RAILWAY_BACKEND_URL"]?.value || getSettingValue("railway", "RAILWAY_BACKEND_URL");
                 handleSave(
                   "RAILWAY_BACKEND_URL",
-                  getSettingValue("railway", "RAILWAY_BACKEND_URL"),
+                  inputValue,
                   "Backend API service URL"
-                )
-              }
+                );
+              }}
               disabled={saving === "RAILWAY_BACKEND_URL"}
               className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
               size="sm"
@@ -226,46 +367,14 @@ const Settings = () => {
             </Button>
           </div>
 
-          <div>
-            <label htmlFor="railway_model_url" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
-              ML Model Service URL
-            </label>
-            <input
-              id="railway_model_url"
-              type="url"
-              value={getSettingValue("railway", "RAILWAY_MODEL_URL")}
-              onChange={(e) => updateLocalSetting("railway", "RAILWAY_MODEL_URL", e.target.value)}
-              placeholder="https://your-ml-service.example.com"
-              className="mt-1 w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-            <Button
-              onClick={() =>
-                handleSave(
-                  "RAILWAY_MODEL_URL",
-                  getSettingValue("railway", "RAILWAY_MODEL_URL"),
-                  "ML model service endpoint URL"
-                )
-              }
-              disabled={saving === "RAILWAY_MODEL_URL"}
-              className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
-              size="sm"
-            >
-              {saving === "RAILWAY_MODEL_URL" ? "Saving..." : (
-                <>
-                  <Save className="w-4 h-4 mr-1" />
-                  Save
-                </>
-              )}
-            </Button>
-          </div>
         </div>
       </Card>
 
       {/* Frontend Service Settings */}
-      <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+      <Card className="p-4 sm:p-6 bg-transparent border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-4">
           <SettingsIcon className="w-5 h-5 mr-2 text-amber-600 dark:text-amber-500" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Frontend Service</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Frontend Service</h2>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Frontend application deployment URL configuration
@@ -278,20 +387,37 @@ const Settings = () => {
             </label>
             <input
               id="vercel_frontend_url"
-              type="url"
+              ref={(el) => {
+                inputRefs.current["VERCEL_FRONTEND_URL"] = el;
+              }}
+              type="text"
               value={getSettingValue("vercel", "VERCEL_FRONTEND_URL")}
-              onChange={(e) => updateLocalSetting("vercel", "VERCEL_FRONTEND_URL", e.target.value)}
+              onChange={(e) => {
+                updateLocalSetting("vercel", "VERCEL_FRONTEND_URL", e.target.value);
+              }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pastedText = e.clipboardData.getData("text");
+                updateLocalSetting("vercel", "VERCEL_FRONTEND_URL", pastedText);
+                // Also update the input element directly
+                if (inputRefs.current["VERCEL_FRONTEND_URL"]) {
+                  inputRefs.current["VERCEL_FRONTEND_URL"].value = pastedText;
+                }
+              }}
               placeholder="https://your-frontend-app.example.com"
+              autoComplete="off"
               className="mt-1 w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <Button
-              onClick={() =>
+              onClick={() => {
+                // Get value directly from input field
+                const inputValue = inputRefs.current["VERCEL_FRONTEND_URL"]?.value || getSettingValue("vercel", "VERCEL_FRONTEND_URL");
                 handleSave(
                   "VERCEL_FRONTEND_URL",
-                  getSettingValue("vercel", "VERCEL_FRONTEND_URL"),
+                  inputValue,
                   "Frontend application deployment URL"
-                )
-              }
+                );
+              }}
               disabled={saving === "VERCEL_FRONTEND_URL"}
               className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
               size="sm"
@@ -308,7 +434,7 @@ const Settings = () => {
       </Card>
 
       {/* Performance & System Settings */}
-      <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+      <Card className="p-4 sm:p-6 bg-transparent border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-4">
           <SettingsIcon className="w-5 h-5 mr-2 text-amber-600 dark:text-amber-500" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Performance & System</h2>

@@ -197,18 +197,18 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6 transition-colors">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
           <p className="text-sm text-muted-foreground dark:text-gray-400">
             Total users: {pagination.total || users.length}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchUsers}>Refresh</Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={fetchUsers} className="flex-1 sm:flex-none">Refresh</Button>
           <Button 
             onClick={() => setShowAddUser(true)}
-            className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white"
+            className="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white"
           >
             + Add User
           </Button>
@@ -268,11 +268,11 @@ const AdminUsers = () => {
         ) : filteredUsers.length > 0 ? (
           filteredUsers.map((user) => (
             <Card key={user.id} className="p-4 bg-transparent border border-gray-100 dark:border-gray-700">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">{user.name || "No Name"}</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                  <div className="mt-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{user.name || "No Name"}</p>
+                  <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                  <div className="mt-1 flex flex-wrap gap-2">
                     <Badge 
                       variant={
                         user.role === "super_admin" 
@@ -291,11 +291,14 @@ const AdminUsers = () => {
                     >
                       {user.role === "super_admin" ? "Super Admin" : user.role === "admin" ? "Admin" : "User"}
                     </Badge>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </span>
                   <Select
@@ -478,6 +481,11 @@ const AdminUsers = () => {
                   placeholder="Enter name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pastedText = e.clipboardData.getData("text");
+                    setFormData({ ...formData, name: pastedText });
+                  }}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600"
                 />
               </div>
@@ -490,6 +498,11 @@ const AdminUsers = () => {
                   placeholder="Enter email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pastedText = e.clipboardData.getData("text");
+                    setFormData({ ...formData, email: pastedText });
+                  }}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600"
                 />
               </div>
@@ -502,6 +515,11 @@ const AdminUsers = () => {
                   placeholder="Enter password (min 6 chars, with uppercase, lowercase, and number)"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pastedText = e.clipboardData.getData("text");
+                    setFormData({ ...formData, password: pastedText });
+                  }}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

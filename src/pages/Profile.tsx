@@ -54,6 +54,17 @@ const Profile = () => {
       if (res.data && res.data.success) {
         const userData = res.data.user;
         setProfile(userData as UserProfile);
+        
+        if (setUser && user) {
+          setUser({ ...user, profilePicture: userData.profilePicture || null });
+        }
+        
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+          const userDataLocal = JSON.parse(savedUser);
+          userDataLocal.profilePicture = userData.profilePicture || null;
+          localStorage.setItem("user", JSON.stringify(userDataLocal));
+        }
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to fetch profile");
@@ -119,20 +130,28 @@ const Profile = () => {
 
       const updateRes = await userService.updateProfilePicture(imageUrl);
       if (updateRes.data && updateRes.data.success) {
-        setProfile((prev) => (prev ? { ...prev, profilePicture: imageUrl } : null));
+        const updatedProfilePicture = updateRes.data.user?.profilePicture || imageUrl;
+        
+        setProfile((prev) => (prev ? { ...prev, profilePicture: updatedProfilePicture } : null));
         
         if (setUser && user) {
-          setUser({ ...user, profilePicture: imageUrl });
+          setUser({ ...user, profilePicture: updatedProfilePicture });
         }
 
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
           const userData = JSON.parse(savedUser);
-          userData.profilePicture = imageUrl;
+          userData.profilePicture = updatedProfilePicture;
           localStorage.setItem("user", JSON.stringify(userData));
         }
 
         toast.success("Profile picture updated successfully");
+        
+        setTimeout(() => {
+          fetchProfile();
+        }, 500);
+      } else {
+        toast.error("Failed to update profile picture: Invalid response from server");
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to upload profile picture");
@@ -226,7 +245,15 @@ const Profile = () => {
 
   const getProfilePictureUrl = () => {
     if (profile?.profilePicture) {
-      return profile.profilePicture;
+      // Ensure URL is absolute (starts with http:// or https://)
+      // If it's a relative URL, make it absolute using the API base URL
+      const url = profile.profilePicture;
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      // If it's a relative path, prepend the API base URL
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      return `${apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
     }
     return null;
   };

@@ -288,8 +288,20 @@ const DetectionPage: React.FC = () => {
         // Handle timeout errors
         if (err.message.includes("timeout") || err.message.includes("504")) {
           setError("Prediksi memakan waktu terlalu lama. Silakan coba lagi dengan gambar yang lebih kecil atau tunggu beberapa saat.");
+        } else if (err.message.includes("503")) {
+          // Don't show technical error, show user-friendly message
+          setError("Sistem sedang dalam tahap maintenance. Silakan coba lagi nanti.");
+        } else if (err.message.includes("Request failed")) {
+          // Generic network error - show user-friendly message
+          setError("Terjadi kesalahan saat menghubungi server. Silakan coba lagi.");
         } else {
-          setError(err.message);
+          // For other errors, show the message if it's user-friendly, otherwise show generic message
+          const isTechnicalError = err.message.includes("status code") || 
+                                  err.message.includes("ECONNREFUSED") ||
+                                  err.message.includes("ERR_");
+          setError(isTechnicalError 
+            ? "Terjadi kesalahan saat memproses permintaan. Silakan coba lagi." 
+            : err.message);
         }
       } else if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as { 
@@ -298,6 +310,7 @@ const DetectionPage: React.FC = () => {
             data?: { 
               message?: string;
               suggestion?: string;
+              maintenance?: boolean;
             } 
           };
           code?: string;
@@ -306,12 +319,31 @@ const DetectionPage: React.FC = () => {
         
         if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
           setError("Prediksi memakan waktu terlalu lama setelah beberapa percobaan. Service mungkin sedang dalam proses wake-up. Silakan coba lagi dalam beberapa saat.");
-        } else if (axiosError.response?.status === 503 || axiosError.response?.status === 504) {
-          setError("Service sedang memulai. Semua percobaan telah dilakukan. Silakan coba lagi dalam beberapa detik.");
+        } else if (axiosError.response?.status === 503) {
+          // Check if it's maintenance mode
+          if (axiosError.response?.data?.maintenance === true) {
+            setError(axiosError.response?.data?.message || "Sistem sedang dalam tahap maintenance. Silakan coba lagi nanti.");
+          } else {
+            setError("Layanan sedang memulai. Silakan coba lagi dalam beberapa detik.");
+          }
+        } else if (axiosError.response?.status === 504) {
+          setError("Layanan sedang memulai. Silakan coba lagi dalam beberapa detik.");
         } else if (axiosError.response?.status === 404) {
-          setError("Endpoint tidak ditemukan. Pastikan backend sudah running dan URL API benar.");
+          setError("Fitur yang diminta tidak ditemukan. Silakan hubungi administrator.");
+        } else if (axiosError.response?.status === 500) {
+          setError("Terjadi kesalahan pada server. Silakan coba lagi nanti atau hubungi administrator.");
+        } else if (axiosError.response?.status === 401) {
+          setError("Sesi Anda telah berakhir. Silakan login kembali.");
+        } else if (axiosError.response?.status === 403) {
+          setError("Anda tidak memiliki izin untuk melakukan aksi ini.");
         } else {
-          setError(axiosError.response?.data?.message || `Server error: ${axiosError.response?.status || 'Unknown'}`);
+          // Use backend message if available and user-friendly, otherwise show generic message
+          const backendMessage = axiosError.response?.data?.message;
+          if (backendMessage && !backendMessage.includes("status code") && !backendMessage.includes("Request failed")) {
+            setError(backendMessage);
+          } else {
+            setError("Terjadi kesalahan saat memproses permintaan. Silakan coba lagi.");
+          }
         }
       } else {
         setError("Terjadi kesalahan tak terduga");
