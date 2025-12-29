@@ -193,31 +193,37 @@ const AdminPredictionHistory = () => {
                 </button>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button
                 onClick={() => handleDownload("csv")}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-1 sm:flex-initial"
+                size="sm"
               >
                 <Download className="w-4 h-4" />
-                Download CSV
+                <span className="hidden sm:inline">Download CSV</span>
+                <span className="sm:hidden">CSV</span>
               </Button>
               <Button
                 onClick={() => handleDownload("json")}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-1 sm:flex-initial"
+                size="sm"
               >
                 <Download className="w-4 h-4" />
-                Download JSON
+                <span className="hidden sm:inline">Download JSON</span>
+                <span className="sm:hidden">JSON</span>
               </Button>
               {selectedIds.length > 0 && (
                 <Button
                   onClick={handleBulkDelete}
                   variant="destructive"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 flex-1 sm:flex-initial"
+                  size="sm"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Hapus ({selectedIds.length})
+                  <span className="hidden sm:inline">Hapus ({selectedIds.length})</span>
+                  <span className="sm:hidden">Hapus</span>
                 </Button>
               )}
             </div>
