@@ -40,6 +40,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/detection-page" element={<DetectionWrapper />} />
+          <Route path="/maps" element={<MotifMaps />} />
 
           {/* PRIVATE */}
           <Route
@@ -47,14 +48,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <GalleryPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/maps"
-            element={
-              <ProtectedRoute>
-                <MotifMaps />
               </ProtectedRoute>
             }
           />
