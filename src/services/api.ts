@@ -218,9 +218,9 @@ export const userService = {
 };
 
 export const predictionHistoryService = {
-  getAll: (params?: string) => {
+  getAll: (params?: string, signal?: AbortSignal) => {
     const url = params ? `/api/predict/admin/history?${params}` : "/api/predict/admin/history";
-    return api.get(url);
+    return api.get(url, { signal });
   },
 
   getImageUrl: (id: string) => {
