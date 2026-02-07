@@ -99,9 +99,6 @@ function App() {
 
         <Route path="/forbidden" element={<ForbiddenPage />} />
 
-        {/* Cek pada saat testing */}
-        <Route path="/cek-admin" element={<AdminDashboard />} />
-
         <Route path="/login" element={<AuthPage />} />
       </Routes>
       </WastraContextProvider>
