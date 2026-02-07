@@ -303,61 +303,6 @@ const AdminDashboard = () => {
           </table>
         </div>
       </Card>
-
-      {/* Grid Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Komposisi Sistem */}
-        <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-            Komposisi Sistem
-          </h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Total Motif</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {stats?.totalMotifs || 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Total Prediksi</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {stats?.totalPredictions || 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Aktivitas Hari Ini</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {stats?.todayPredictions || 0}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Status Sistem */}
-        <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-            Status Sistem
-          </h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Total Model Data</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {stats?.totalMotifs || 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Sistem Aktif</span>
-              <span className="text-green-600 dark:text-green-500 font-medium">100%</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Update Terakhir</span>
-              <span className="text-gray-900 dark:text-white font-medium text-xs">
-                {stats?.lastUpdated.split(",")[0] || "-"}
-              </span>
-            </div>
-          </div>
-        </Card>
-      </div>
     </div>
   );
 };
