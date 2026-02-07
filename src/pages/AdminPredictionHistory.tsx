@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Trash2, Download, Search, X, Image as ImageIcon } from "lucide-react";
@@ -49,42 +49,82 @@ const AdminPredictionHistory = () => {
     total: 0,
     totalPages: 0,
   });
+  const [rateLimitRetrySeconds, setRateLimitRetrySeconds] = useState<number | null>(null);
 
-  const fetchHistory = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-      });
-      if (searchTerm) {
-        params.append("search", searchTerm);
+  const fetchIdRef = useRef(0);
+
+  const fetchHistory = useCallback(
+    async (signal?: AbortSignal) => {
+      const myId = ++fetchIdRef.current;
+      setRateLimitRetrySeconds(null);
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: pagination.page.toString(),
+          limit: pagination.limit.toString(),
+        });
+        if (searchTerm) {
+          params.append("search", searchTerm);
+        }
+
+        const res = await predictionHistoryService.getAll(params.toString(), signal);
+
+        if (signal?.aborted) return;
+        if (myId !== fetchIdRef.current) return;
+
+        if (res.data && res.data.success) {
+          const historyData = res.data.data || [];
+          const paginationData = res.data.pagination || pagination;
+          setHistory(historyData);
+          setPagination(paginationData);
+        } else {
+          setHistory([]);
+          toast.error(res.data?.message || "Gagal mengambil data prediction history");
+        }
+      } catch (err) {
+        const error = err as AxiosError<ApiError>;
+        if (error.code === "ERR_CANCELED" || error.name === "CanceledError") {
+          return;
+        }
+        if (myId !== fetchIdRef.current) return;
+        const status = error.response?.status;
+        if (status === 429) {
+          const retryAfter = parseInt(error.response?.headers?.["retry-after"] ?? "25", 10) || 25;
+          setRateLimitRetrySeconds(retryAfter);
+          setLoading(false);
+          setTimeout(() => fetchHistory(), retryAfter * 1000);
+          return;
+        }
+        const errorMessage =
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Gagal mengambil data prediction history";
+        toast.error(errorMessage);
+      } finally {
+        const isCurrent = myId === fetchIdRef.current;
+        const wasAborted = signal?.aborted === true;
+        if (isCurrent && !wasAborted) {
+          setLoading(false);
+        }
       }
-
-      const res = await predictionHistoryService.getAll(params.toString());
-
-      if (res.data && res.data.success) {
-        const historyData = res.data.data || [];
-        const paginationData = res.data.pagination || pagination;
-        setHistory(historyData);
-        setPagination(paginationData);
-      } else {
-        setHistory([]);
-        toast.error(res.data?.message || "Gagal mengambil data prediction history");
-      }
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || "Gagal mengambil data prediction history";
-      toast.error(errorMessage);
-      setHistory([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, pagination.limit, searchTerm]);
+    },
+    [pagination.page, pagination.limit, searchTerm]
+  );
 
   useEffect(() => {
-    fetchHistory();
+    const controller = new AbortController();
+    fetchHistory(controller.signal);
+    return () => controller.abort();
   }, [fetchHistory]);
+
+  useEffect(() => {
+    if (rateLimitRetrySeconds === null || rateLimitRetrySeconds <= 0) return;
+    const t = setInterval(() => {
+      setRateLimitRetrySeconds((s) => (s === null || s <= 1 ? null : s - 1));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [rateLimitRetrySeconds]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus prediction history ini?")) {
@@ -237,9 +277,20 @@ const AdminPredictionHistory = () => {
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-gray-400">
-                {searchTerm ? "Tidak ada prediction history yang ditemukan" : "Belum ada prediction history"}
-              </p>
+              {rateLimitRetrySeconds !== null ? (
+                <div className="space-y-2">
+                  <p className="text-amber-600 dark:text-amber-400 font-medium">
+                    Terlalu banyak request (429)
+                  </p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    Data akan dimuat ulang otomatis dalam {rateLimitRetrySeconds} detik. Silakan tunggu.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">
+                  {searchTerm ? "Tidak ada prediction history yang ditemukan" : "Belum ada prediction history"}
+                </p>
+              )}
             </div>
           ) : (
             <>
