@@ -251,3 +251,12 @@
     max-width: 240px;
   }
 }
+::selection {
+  background-color: #f59e0b; /* Amber-500 */
+  color: white; /* Teks jadi putih agar kontras */
+}
+
+::-moz-selection { /* Khusus Firefox */
+  background-color: #f59e0b;
+  color: white;
+}
