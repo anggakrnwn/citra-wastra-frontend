@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardStats {
-  totalUsers?: number;
-  totalAdmins?: number;
-  totalSuperAdmins?: number;
   totalMotifs: number;
   totalPredictions: number;
   pendingPredictions?: number;
@@ -47,9 +44,6 @@ const AdminDashboard = () => {
           const systemStats = systemStatsResponse.data.data;
           
           setStats({
-            totalUsers: systemStats.users.total,
-            totalAdmins: systemStats.users.admins,
-            totalSuperAdmins: systemStats.users.superAdmins,
             totalMotifs: systemStats.motifs.total,
             totalPredictions: systemStats.predictions.total,
             pendingPredictions: systemStats.predictions.pending,
@@ -191,44 +185,6 @@ const AdminDashboard = () => {
             <tbody>
               <tr className="border-b border-gray-100 dark:border-gray-800">
                 <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                  Total Pengguna
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                  {stats?.totalUsers || 0}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                  {stats?.totalUsers || 0} aktif
-                </td>
-                <td className="py-3 px-4">
-                  <a
-                    href="/admin/users"
-                    className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
-                  >
-                    Lihat →
-                  </a>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                  Total Admin
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                  {stats?.totalAdmins || 0}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                  {stats?.totalSuperAdmins || 0} Super Admin, {stats?.totalAdmins || 0} Admin
-                </td>
-                <td className="py-3 px-4">
-                  <a
-                    href="/admin/users?role=admin"
-                    className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
-                  >
-                    Lihat →
-                  </a>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
                   Total Motif
                 </td>
                 <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
@@ -350,33 +306,6 @@ const AdminDashboard = () => {
 
       {/* Grid Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Distribusi Pengguna */}
-        <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-            Distribusi Pengguna
-          </h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Super Admin</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {stats?.totalSuperAdmins || 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Admin</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {stats?.totalAdmins || 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">User</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                {(stats?.totalUsers || 0) - (stats?.totalAdmins || 0) - (stats?.totalSuperAdmins || 0)}
-              </span>
-            </div>
-          </div>
-        </Card>
-
         {/* Komposisi Sistem */}
         <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
