@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useWastra } from "../context/WastraContext";
 import { useTheme } from "../context/ThemeContext";
@@ -14,6 +14,24 @@ const Navbar: React.FC = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
+
+
+useEffect(() => {
+    if (showConfirm) {
+      // Saat popup muncul, matikan scroll
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Saat popup tertutup, HIDUPKAN LAGI scroll
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup: Pastikan scroll hidup lagi saat pindah halaman/komponen hilang
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showConfirm]);
+
+
 
   const UserAvatar = ({ name, profilePicture, email }: { name?: string | null; profilePicture?: string | null; email?: string }) => {
     if (profilePicture) {

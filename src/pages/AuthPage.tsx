@@ -93,7 +93,11 @@ const AuthPage: React.FC = () => {
     <div className="min-h-screen flex bg-gradient-to-br from-amber-600 via-amber-500 to-orange-600 transition-colors">
       {/* Left Section - Logo */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12">
-        <div className="text-center animate-slide-in-up">
+        {/* Tambahkan onClick dan cursor-pointer di sini */}
+        <div 
+          className="text-center animate-slide-in-up cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={() => navigate('/')} 
+        >
           <img 
             src={wastralogo} 
             alt="Citra Wastra Logo" 
