@@ -1,8 +1,22 @@
-import React, { useState, useContext, useEffect } from "react";
+import * as React from "react";
+import { useState, useContext, useEffect, lazy, Suspense } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
 import { X } from "lucide-react";
 import { predictionService, motifService } from "../services/api";
+const BatikArViewer = lazy(() => import("../components/BatikArViewer"));
+const RichMarkdown = lazy(() => import("../components/RichMarkdown"));
+import Footer from "../components/Footer";
+
+// Sample images used for “Try a sample image” section
+import sample1 from "../assets/images/batik-preview1.jpeg";
+import sample2 from "../assets/images/batik-preview2.jpeg";
+import sample3 from "../assets/images/batik-preview3.jpeg";
+import sample4 from "../assets/images/batik-preview4.jpeg";
+import sample5 from "../assets/images/batik-bali.jpg";
+import sample6 from "../assets/images/batik-parang.jpg";
+
+import { useI18n } from "../context/I18nContext";
 
 interface TopPrediction {
   class_name: string;
@@ -14,6 +28,7 @@ interface DetectionData {
   confidence: number;
   top_predictions: TopPrediction[];
   timestamp: string;
+  aiNarrative?: string | null;
 }
 
 interface DetectionResponse {
@@ -33,6 +48,7 @@ interface MotifData {
 
 const DetectionPage: React.FC = () => {
   const { user, loading } = useContext(WastraContext) ?? {};
+  const { t } = useI18n();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -44,6 +60,32 @@ const DetectionPage: React.FC = () => {
   const [loadingMotif, setLoadingMotif] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const [loadingSample, setLoadingSample] = useState(false);
+
+  const sampleImages = [
+    { src: sample1, alt: "Batik sample 1" },
+    { src: sample2, alt: "Batik sample 2" },
+    { src: sample3, alt: "Batik sample 3" },
+    { src: sample4, alt: "Batik sample 4" },
+    { src: sample5, alt: "Batik sample 5" },
+    { src: sample6, alt: "Batik sample 6" },
+  ];
+
+  const loadSampleImage = async (src: string) => {
+    try {
+      setError(null);
+      setLoadingSample(true);
+      const response = await fetch(src);
+      const blob = await response.blob();
+      const file = new File([blob], "sample.jpg", { type: blob.type || "image/jpeg" });
+      processImageFile(file);
+    } catch (err) {
+      console.error("Failed to load sample image", err);
+      setError("Gagal memuat sample image. Silakan coba lagi.");
+    } finally {
+      setLoadingSample(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -52,7 +94,7 @@ const DetectionPage: React.FC = () => {
   }, [previewUrl]);
 
   if (loading) {
-    return <p className="text-center mt-6 text-gray-900 dark:text-white">Checking login status...</p>;
+    return <p className="text-center mt-6 text-gray-900 dark:text-white">{t("detection.checkingLogin")}</p>;
   }
 
   if (!user) {
@@ -67,7 +109,7 @@ const DetectionPage: React.FC = () => {
 
   const processImageFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setError("File harus berupa gambar!");
+      setError(t("detection.fileMustBeImage"));
       return;
     }
     setSelectedImage(file);
@@ -272,8 +314,10 @@ const DetectionPage: React.FC = () => {
       };
       const response = await predictionService.predict(formData, 3, onRetry);
       const json: DetectionResponse = response.data;
+      console.log("=== API PREDICTION RESPONSE ===", json);
 
       if (json.success && json.data) {
+        console.log("Setting result to:", json.data);
         setResult(json.data);
         setRetryMessage(null);
         await fetchMotifByPrediction(json.data.prediction);
@@ -355,24 +399,25 @@ const DetectionPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-center mb-4 text-gray-800 dark:text-white">
-          Batik Motif Detection
-        </h1>
-      <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-8">
-        Upload your batik photo and let our AI recognize its motif and origin.
-      </p>
+      <div className="grid-hero-bg relative">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <h1 className="text-3xl font-bold text-center mb-3 text-gray-800 dark:text-white">
+            Batik Motif Detection
+          </h1>
+          <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-10">
+            Upload your batik photo and let our AI recognize its motif and origin.
+          </p>
 
-      <div
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-          isDragging
-            ? "border-amber-500 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30"
-            : "bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-gray-100 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-600 hover:shadow-md"
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
+        <div
+          className={`relative z-10 border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
+            isDragging
+              ? "border-amber-500 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30"
+              : `${result ? "bg-white dark:bg-gray-900" : "bg-white/80 dark:bg-gray-900/70"} border-gray-100 dark:border-gray-700 hover:border-amber-600 dark:hover:border-amber-600 hover:shadow-lg`
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
         {previewUrl ? (
           <div className="relative">
             <img
@@ -495,6 +540,30 @@ const DetectionPage: React.FC = () => {
         )}
       </div>
 
+      <div className="mt-8 text-center">
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-4">
+          Or Try a Sample Image
+        </p>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 justify-center">
+          {sampleImages.map((img, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => loadSampleImage(img.src)}
+              disabled={loadingSample}
+              className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              aria-label={`Sample image ${idx + 1}`}
+            >
+              <img
+                src={img.src}
+                alt={img.alt}
+                className="w-full h-20 object-cover transition-transform duration-200 hover:scale-105"
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+
       {selectedImage && (
         <div className="text-center mt-6">
           <button
@@ -522,7 +591,8 @@ const DetectionPage: React.FC = () => {
       )}
 
       {result && (
-        <div className="mt-8 p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="mt-8 p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 relative">
+          <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-xl" style={{ zIndex: -1 }} />
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
               {result.prediction}
@@ -531,6 +601,35 @@ const DetectionPage: React.FC = () => {
               {(result.confidence * 100).toFixed(2)}%
             </span>
           </div>
+
+          {result.aiNarrative && (
+            <div className="mb-6 p-5 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/40 dark:to-gray-900 rounded-xl shadow-md border border-amber-200 dark:border-amber-700">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-amber-100 mb-3">
+                Filosofi & cerita motif
+              </h3>
+              
+              <div className="text-gray-800 dark:text-gray-100 leading-relaxed prose prose-amber dark:prose-invert max-w-none">
+                <Suspense fallback={<div className="text-sm text-gray-500 dark:text-gray-400">Memuat deskripsi motif...</div>}>
+                  <RichMarkdown markdown={result.aiNarrative} />
+                </Suspense>
+              </div>
+            </div>
+          )}
+          
+          {(motifData?.image || previewUrl) && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+                {t("detection.arTitle")}
+              </h3>
+
+              <Suspense fallback={<div className="text-sm text-gray-500 dark:text-gray-400 mt-4">Memuat tampilan AR...</div>}>
+                <BatikArViewer
+                  textureUrl={(previewUrl as string) || (motifData?.image as string)}
+                  className="rounded-xl overflow-hidden"
+                />
+              </Suspense>
+            </div>
+          )}
 
           {loadingMotif ? (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
@@ -589,13 +688,13 @@ const DetectionPage: React.FC = () => {
                 }
               </div>
             </div>
-          ) : (
+          ) : !result.aiNarrative ? (
             <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
               <p className="text-gray-500 dark:text-gray-400 text-sm italic">
                 Deskripsi untuk motif "{result.prediction}" belum tersedia di database.
               </p>
             </div>
-          )}
+          ) : null}
 
           {Array.isArray(result.top_predictions) &&
           result.top_predictions.length > 0 ? (
@@ -622,7 +721,9 @@ const DetectionPage: React.FC = () => {
           )}
         </div>
       )}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

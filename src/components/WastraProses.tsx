@@ -1,36 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
-import flowImage from "../assets/images/wastraproses.png";
+import flowImage from "../assets/images/wastraproses.webp";
 import kamera from "../assets/icons/camera.svg";
 import insight from "../assets/icons/insight.svg";
 import lokasi from "../assets/icons/lokasi.svg";
 import catatan from "../assets/icons/catatan.svg";
+import { useI18n } from "../context/I18nContext";
 
-const prosesList = [
-  {
-    title: "Capture or Upload",
-    desc: "Take a photo of the batik using your camera or upload one from your device's gallery.",
-    icon: kamera,
-    label: "kamera",
-  },
-  {
-    title: "Pattern Recognition",
-    desc: "The AI analyzes the batik's motifs using machine learning to identify shapes, colors, and unique characteristics.",
-    icon: insight,
-    label: "insight",
-  },
-  {
-    title: "Origin Identification",
-    desc: "The system matches the analysis results with its database to determine the batik's region of origin and motif type.",
-    icon: lokasi,
-    label: "lokasi",
-  },
-  {
-    title: "Cultural Insight",
-    desc: "Receive detailed information about the history, philosophy, and cultural meaning behind the detected batik motif.",
-    icon: catatan,
-    label: "budaya",
-  },
+const prosesMeta = [
+  { icon: kamera, label: "kamera", tTitle: "process.s1.title", tDesc: "process.s1.desc" },
+  { icon: insight, label: "insight", tTitle: "process.s2.title", tDesc: "process.s2.desc" },
+  { icon: lokasi, label: "lokasi", tTitle: "process.s3.title", tDesc: "process.s3.desc" },
+  { icon: catatan, label: "budaya", tTitle: "process.s4.title", tDesc: "process.s4.desc" },
 ];
 
 const containerVariants = {
@@ -55,8 +36,9 @@ const itemVariants = {
 };
 
 const WastraProses: React.FC = () => {
+  const { t } = useI18n();
   return (
-    <section className="bg-white dark:bg-gray-900 py-16 md:py-24 transition-colors">
+    <section id="how-it-works" className="bg-white dark:bg-gray-900 py-16 md:py-24 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -66,15 +48,14 @@ const WastraProses: React.FC = () => {
           className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-            How It Works
+            {t("process.title")}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Discover the origin, pattern, and cultural meaning of your batik in seconds
+            {t("process.subtitle")}
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Steps Section */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -82,34 +63,37 @@ const WastraProses: React.FC = () => {
             variants={containerVariants}
             className="space-y-6"
           >
-            {prosesList.map((item, index) => (
+            {prosesMeta.map((item, index) => (
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="flex gap-5 bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-100 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-600 hover:shadow-md transition-all duration-300"
+                className="flex gap-5 bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-100 dark:border-gray-700 hover:border-amber-600 dark:hover:border-amber-600 hover:shadow-md transition-all duration-300"
               >
                 <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center shadow-sm">
+                  <div className="w-14 h-14 rounded-xl bg-amber-600/10 text-amber-600 flex items-center justify-center shadow-sm transition-colors">
                     <img 
                       src={item.icon} 
                       alt={item.label} 
+                      loading="lazy"
+                      decoding="async"
+                      width={28}
+                      height={28}
                       className="w-7 h-7"
                     />
                   </div>
                 </div>
                 <div className="flex-1 pt-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {item.title}
+                    {t(item.tTitle)}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {item.desc}
+                    {t(item.tDesc)}
                   </p>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Image Section */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -117,11 +101,22 @@ const WastraProses: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="flex justify-center items-center"
           >
-            <img
-              src={flowImage}
-              alt="Citra Wastra Process Flow"
-              className="w-full max-w-md rounded-lg"
-            />
+            <picture>
+              <source
+                srcSet={flowImage}
+                type="image/webp"
+              />
+              <img
+                src={flowImage}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width={600}
+                height={400}
+                sizes="(min-width: 1024px) 570px, 100vw"
+                className="w-full max-w-md rounded-lg"
+              />
+            </picture>
           </motion.div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { motifService } from "../services/api";
+import { useI18n } from "../context/I18nContext";
 
 interface MotifItem {
   id: string;
@@ -82,6 +83,7 @@ function ChangeMapView({ center, zoom }: { center: [number, number]; zoom: numbe
 }
 
 const MotifMaps: React.FC = () => {
+  const { t, lang } = useI18n() as any;
   const [motifs, setMotifs] = useState<MotifItem[]>([]);
   const [markers, setMarkers] = useState<MotifMarker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +165,7 @@ const MotifMaps: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 dark:border-amber-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Memuat peta motif batik...</p>
+          <p className="text-gray-600 dark:text-gray-300">{lang === "id" ? "Memuat peta motif batik..." : "Loading batik motif map..."}</p>
         </div>
       </div>
     );
@@ -175,7 +177,7 @@ const MotifMaps: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 transition-colors">
           <input
             type="text"
-            placeholder="Cari motif batik..."
+            placeholder={t("maps.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => {
@@ -202,17 +204,17 @@ const MotifMaps: React.FC = () => {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            <span className="hidden sm:inline">Cari</span>
+            <span className="hidden sm:inline">{t("maps.search")}</span>
           </button>
         </div>
       </div>
       {!searchQuery && (
         <div className="absolute top-40 sm:top-40 md:top-32 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
           <h1 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white mb-1">
-            Peta Asal Motif Batik
+            {t("maps.title")}
           </h1>
           <p className="text-xs text-gray-600 dark:text-gray-300">
-            Klik marker di peta untuk melihat informasi motif batik dari daerah tersebut
+            {t("maps.instructions")}
           </p>
         </div>
       )}
@@ -220,10 +222,10 @@ const MotifMaps: React.FC = () => {
       {searchQuery && filteredMarkers.length > 0 && (
         <div className="absolute top-40 sm:top-40 md:top-32 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs transition-colors">
           <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white">
-            Ditemukan {filteredMarkers.length} motif batik
+            {t("maps.foundCount").replace("{count}", String(filteredMarkers.length))}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-            untuk "{searchQuery}"
+            {t("maps.forQuery").replace("{q}", searchQuery)}
           </p>
         </div>
       )}
@@ -231,10 +233,10 @@ const MotifMaps: React.FC = () => {
       {searchQuery && filteredMarkers.length === 0 && (
         <div className="absolute top-40 sm:top-40 md:top-32 left-2 sm:left-4 z-30 md:z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 max-w-[calc(100%-1rem)] sm:max-w-xs border-l-4 border-amber-500 transition-colors">
           <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white">
-            Tidak ditemukan
+            {t("maps.notFound")}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-            Tidak ada motif batik yang cocok dengan "{searchQuery}"
+            {t("maps.noMatch").replace("{q}", searchQuery)}
           </p>
         </div>
       )}
@@ -257,7 +259,7 @@ const MotifMaps: React.FC = () => {
           <Marker
             key={`${marker.motif.id}-${index}`}
             position={marker.position}
-            icon={createCustomIcon("#F59E0B")}
+            icon={createCustomIcon("#B45309")}
             eventHandlers={{
               click: () => {
                 setSelectedMotif(marker.motif);
@@ -283,7 +285,7 @@ const MotifMaps: React.FC = () => {
                 </p>
                 {marker.motif.region && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    Region: {marker.motif.region}
+                {t("maps.region")} {marker.motif.region}
                   </p>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 mb-2">
@@ -293,7 +295,7 @@ const MotifMaps: React.FC = () => {
                   onClick={() => setSelectedMotif(marker.motif)}
                   className="w-full mt-2 px-3 py-1.5 bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-colors"
                 >
-                  Lihat Detail
+              {lang === "id" ? "Lihat Detail" : "View Details"}
                 </button>
               </div>
             </Popup>
@@ -322,7 +324,7 @@ const MotifMaps: React.FC = () => {
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          <span className="hidden xs:inline">{searchQuery ? filteredMarkers.length : markers.length} Motif Batik</span>
+          <span className="hidden xs:inline">{searchQuery ? filteredMarkers.length : markers.length} {t("maps.totalMotifs")}</span>
           <span className="xs:hidden">{searchQuery ? filteredMarkers.length : markers.length}</span>
         </button>
       </div>
@@ -357,10 +359,10 @@ const MotifMaps: React.FC = () => {
             {selectedMotif.name}
           </h2>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2">
-            <span className="font-semibold">Provinsi:</span> {selectedMotif.province}
+            <span className="font-semibold">{t("maps.province")}</span> {selectedMotif.province}
           </p>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4">
-            <span className="font-semibold">Region:</span> {selectedMotif.region}
+            <span className="font-semibold">{t("maps.region")}</span> {selectedMotif.region}
           </p>
           <p className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm leading-relaxed mb-4">
             {selectedMotif.description}
@@ -384,4 +386,3 @@ const MotifMaps: React.FC = () => {
 };
 
 export default MotifMaps;
-

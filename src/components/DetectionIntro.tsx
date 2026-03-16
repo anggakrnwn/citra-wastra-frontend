@@ -8,31 +8,24 @@ import batik1 from "../assets/images/batik-preview1.jpeg";
 import batik2 from "../assets/images/batik-preview2.jpeg";
 import batik3 from "../assets/images/batik-preview3.jpeg";
 import batik4 from "../assets/images/batik-preview4.jpeg";
+import { useI18n } from "../context/I18nContext";
 
-const features = [
+const featuresMeta = [
   {
     icon: accuracy,
-    title: "Trusted Accuracy",
-    description:
-      "Our AI model provides reliable pattern recognition with industry-leading precision.",
+    tTitle: "detectIntro.f1.title",
+    tDesc: "detectIntro.f1.desc",
   },
-  {
-    icon: motif,
-    title: "Comprehensive Pattern Library",
-    description:
-      "Identify batik, tenun, songket, and other traditional textile patterns in one platform.",
-  },
+  { icon: motif, tTitle: "detectIntro.f2.title", tDesc: "detectIntro.f2.desc" },
   {
     icon: report,
-    title: "AI-Powered Identification",
-    description:
-      "Identify and explore traditional textile patterns using AI technology.",
+    tTitle: "detectIntro.f3.title",
+    tDesc: "detectIntro.f3.desc",
   },
   {
     icon: global,
-    title: "Cross-Platform Access",
-    description:
-      "Available on all devices with seamless cloud synchronization.",
+    tTitle: "detectIntro.f4.title",
+    tDesc: "detectIntro.f4.desc",
   },
 ];
 
@@ -41,6 +34,7 @@ const delayClasses = ["delay-0", "delay-200", "delay-400", "delay-600"];
 const DetectionIntro: React.FC = () => {
   const navigate = useNavigate();
   const isLoggedIn = false;
+  const { t } = useI18n();
 
   const handleLetsDetect = () => {
     if (!isLoggedIn) navigate("/login");
@@ -50,21 +44,18 @@ const DetectionIntro: React.FC = () => {
   return (
     <section className="relative bg-white dark:bg-gray-900 py-10 overflow-hidden transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-      
-        <div className="animate-slide-in-left">
-          <h1 className="text-display font-extrabold text-gray-900 dark:text-white leading-tight">
-            Preserving Cultural Heritage Through Patterns
+        <div className="animate-slide-in-left flex flex-col items-center md:items-start text-center md:text-left">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            {t("detectIntro.title")}
           </h1>
           <p className="mt-6 max-w-md text-body-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-            Our intelligent system helps researchers, artisans, and enthusiasts
-            identify and understand the rich history behind Indonesian textile
-            patterns, ensuring our cultural heritage thrives.
+            {t("detectIntro.body")}
           </p>
           <button
             onClick={handleLetsDetect}
-            className="mt-8 bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white px-6 py-3 rounded-md font-semibold transition"
+            className="mt-8 bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600 text-white px-7 py-3.5 rounded-full font-bold text-sm transition-all shadow-lg active:scale-95"
           >
-            Let's Detect →
+            {t("detectIntro.cta")}
           </button>
         </div>
 
@@ -84,20 +75,22 @@ const DetectionIntro: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {features.map((f, index) => (
-          <div
-            key={index}
-            className="text-center p-6 hover:shadow-lg transition-shadow rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
-          >
-            <img src={f.icon} alt={f.title} className="w-8 h-8 mx-auto" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-3">
-              {f.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{f.description}</p>
-          </div>
-        ))}
-      </div>
+    <div className="mt-16 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {featuresMeta.map((f, index) => (
+        <div
+          key={index}
+          className="text-center p-4 md:p-6 hover:shadow-lg transition-shadow rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
+        >
+          <img src={f.icon} alt="" className="w-8 h-8 mx-auto" />
+          <h3 className="text-sm md:text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2 md:mb-3">
+            {t(f.tTitle)}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 text-[11px] md:text-sm leading-relaxed line-clamp-3 md:line-clamp-none">
+            {t(f.tDesc)}
+          </p>
+        </div>
+      ))}
+    </div>
     </section>
   );
 };

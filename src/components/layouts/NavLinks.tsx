@@ -1,66 +1,72 @@
 import type React from "react";
 import { NavLink } from "react-router-dom";
+import { useI18n } from "../../context/I18nContext";
 
-interface NavlinksProps {
+interface NavLinksProps {
   onClick?: () => void;
   mobile?: boolean;
   userRole?: string;
 }
 
-const NavLinks: React.FC<NavlinksProps> = ({ onClick, mobile }) => {
-  const baseNavItems = [
-    { name: "Home", path: "/" },
-    { name: "Detection", path: "/detection-page" },
-    { name: "Gallery", path: "/gallery-page" },
-    { name: "Maps", path: "/maps" },
-    { name: "About", path: "/about" },
+const NavLinks: React.FC<NavLinksProps> = ({ onClick, mobile = false }) => {
+  const { t } = useI18n();
+
+  const navItems = [
+    { name: t("nav.home"), path: "/" },
+    { name: t("nav.detection"), path: "/detection-page" },
+    { name: t("nav.gallery"), path: "/gallery-page" },
+    { name: t("nav.maps"), path: "/maps" },
+    { name: t("nav.about"), path: "/about" },
   ];
 
-  if (mobile) {
-    const allItems = [
-      ...baseNavItems,
-    ];
+  const baseClass = "transition duration-200 ease-in-out";
 
+  const activeClass = "bg-amber-600/10 text-amber-600 font-semibold";
+
+  const inactiveClass =
+    "text-gray-700 dark:text-gray-300 hover:text-[#92400E] hover:bg-[#92400E]/5";
+
+  // ---------- MOBILE NAV ----------
+  if (mobile) {
     return (
-      <>
-        {allItems.map(({ name, path }) => (
+      <nav className="flex flex-col gap-0.5">
+        {" "}
+        {/* Dikurangi dari gap-1 */}
+        {navItems.map(({ name, path }) => (
           <NavLink
             key={path}
             to={path}
             onClick={onClick}
             className={({ isActive }) =>
-              `block py-2 ${
-                isActive
-                  ? "text-amber-600 dark:text-amber-500 font-semibold border-l-4 border-amber-600 dark:border-amber-500 pl-3 transition"
-                  : "text-gray-700 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-500 pl-4 transition"
+              `${baseClass} block px-4 py-2.5 rounded-lg text-sm ${
+                // py-2.5 atau py-2 agar pas
+                isActive ? activeClass : inactiveClass
               }`
             }
           >
             {name}
           </NavLink>
         ))}
-      </>
+      </nav>
     );
   }
-
+  // ---------- DESKTOP NAV ----------
   return (
-    <>
-      {baseNavItems.map(({ name, path }) => (
+    <nav className="flex items-center justify-center gap-3">
+      {navItems.map(({ name, path }) => (
         <NavLink
           key={path}
           to={path}
           className={({ isActive }) =>
-            `${
-              isActive
-                ? "text-amber-600 dark:text-amber-500 font-semibold border-b-2 border-amber-600 dark:border-amber-500 pb-1 transition"
-                : "text-gray-700 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-500 pb-1 transition"
+            `${baseClass} px-3 py-1.5 rounded-full ${
+              isActive ? activeClass : inactiveClass
             }`
           }
         >
           {name}
         </NavLink>
       ))}
-    </>
+    </nav>
   );
 };
 
