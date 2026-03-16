@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { X, Search } from "lucide-react";
 import type { MotifItem } from "../assets/data/dataset";
-import { motifService } from "../services/api";
+import api, { motifService } from "../services/api";
 import { WILAYAH_API_URL } from "../../config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "../context/I18nContext";
@@ -31,9 +31,8 @@ const DetailModal = ({ item, onClose }: { item: MotifItem | null; onClose: () =>
   useEffect(() => {
     if (item && item.description === "Klik untuk melihat detail filosofi motif ini.") {
       setLoadingDesc(true);
-      fetch(`/api/philosophy?name=${encodeURIComponent(item.name)}`)
-        .then(res => res.json())
-        .then(data => setDescription(data.philosophy))
+      api.get(`/api/philosophy?name=${encodeURIComponent(item.name)}`)
+        .then(res => setDescription(res.data.philosophy))
         .catch(() => setDescription("Gagal memuat deskripsi."))
         .finally(() => setLoadingDesc(false));
     }
