@@ -28,7 +28,7 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
     return null;
   });
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
 
   useEffect(() => {
     const handleStorageChange = () => {

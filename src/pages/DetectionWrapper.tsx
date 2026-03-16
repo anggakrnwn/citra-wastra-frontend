@@ -7,7 +7,6 @@ const DetectionPage = lazy(() => import("./DetectionPage"));
 
 export default function DetectionWrapper() {
   const { user, loading } = useWastra();
-  const { t } = useI18n();
 
   if (!user && !loading) {
     return (

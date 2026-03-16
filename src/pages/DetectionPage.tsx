@@ -3,7 +3,7 @@ import { useState, useContext, useEffect, lazy, Suspense } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
 import { X, Volume2, VolumeX, Loader2 } from "lucide-react";
-import { predictionService, motifService, ttsService } from "../services/api";
+import { predictionService, motifService, ttsService, galleryService } from "../services/api";
 const BatikArViewer = lazy(() => import("../components/BatikArViewer"));
 const RichMarkdown = lazy(() => import("../components/RichMarkdown"));
 import Footer from "../components/Footer";
@@ -491,7 +491,7 @@ const DetectionPage: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Kamu harus login terlebih dahulu!");
 
-      const onRetry = (attempt: number, delay: number) => {
+      const onRetry = (attempt: number) => {
         const messageKey = `detection.retry${attempt}`;
         setRetryMessage(t(messageKey) || `Menghubungkan ke server... (${attempt}/3)`);
       };

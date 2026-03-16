@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import api, { motifService, galleryService } from "../services/api";
+import { motifService, galleryService } from "../services/api";
 import { useI18n } from "../context/I18nContext";
 
 interface MotifItem {

@@ -14,6 +14,10 @@ const ProtectedRoute = ({ children, adminOnly, superAdminOnly }: ProtectedRouteP
     return <Navigate to="/login" replace />;
   }
 
+  if (loading || !user) {
+    return null;
+  }
+
   if (superAdminOnly && user.role !== "super_admin") {
     return <Navigate to="/forbidden" replace />;
   }
