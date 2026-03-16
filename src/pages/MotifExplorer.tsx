@@ -111,8 +111,6 @@ const MotifExplorer: React.FC = () => {
   const [detail, setDetail] = useState<MotifItem | null>(null);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [regencies, setRegencies] = useState<Regency[]>([]);
-  const [loadingProvinces, setLoadingProvinces] = useState(false);
-  const [loadingRegencies, setLoadingRegencies] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,7 +118,6 @@ const MotifExplorer: React.FC = () => {
 
   useEffect(() => {
     const fetchProvinces = async () => {
-      setLoadingProvinces(true);
       try {
         const res = await fetch(`${WILAYAH_API_URL}/provinces`);
         if (!res.ok) throw new Error("Gagal mengambil data provinsi");
@@ -128,8 +125,6 @@ const MotifExplorer: React.FC = () => {
         setProvinces(data);
       } catch (err) {
         console.error("Error fetching provinces:", err);
-      } finally {
-        setLoadingProvinces(false);
       }
     };
     fetchProvinces();
@@ -143,7 +138,6 @@ const MotifExplorer: React.FC = () => {
     }
 
     const fetchRegencies = async () => {
-      setLoadingRegencies(true);
       try {
         const res = await fetch(`${WILAYAH_API_URL}/regencies/${selectedProvinceId}`);
         if (!res.ok) throw new Error("Gagal mengambil data kota/kabupaten");
@@ -152,8 +146,6 @@ const MotifExplorer: React.FC = () => {
         setSelectedRegencyId("");
       } catch (err) {
         console.error("Error fetching regencies:", err);
-      } finally {
-        setLoadingRegencies(false);
       }
     };
     fetchRegencies();
