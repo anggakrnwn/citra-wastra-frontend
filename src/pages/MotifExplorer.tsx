@@ -31,7 +31,8 @@ const DetailModal = ({ item, onClose }: { item: MotifItem | null; onClose: () =>
   useEffect(() => {
     if (item && item.description === "Klik untuk melihat detail filosofi motif ini.") {
       setLoadingDesc(true);
-      api.get(`/api/philosophy?name=${encodeURIComponent(item.name)}`)
+      const queryParams = item.id ? `id=${item.id}&name=${encodeURIComponent(item.name)}` : `name=${encodeURIComponent(item.name)}`;
+      api.get(`/api/philosophy?${queryParams}`)
         .then(res => setDescription(res.data.philosophy))
         .catch(() => setDescription("Gagal memuat deskripsi."))
         .finally(() => setLoadingDesc(false));
