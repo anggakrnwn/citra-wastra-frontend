@@ -1,7 +1,6 @@
 import { useWastra } from "../context/WastraContext";
 import DetectIntro from "../components/DetectionIntro";
 import { Suspense, lazy } from "react";
-import { useI18n } from "../context/I18nContext";
 
 const DetectionPage = lazy(() => import("./DetectionPage"));
 

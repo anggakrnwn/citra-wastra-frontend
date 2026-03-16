@@ -339,14 +339,12 @@ const DetectionPage: React.FC = () => {
     if (!predictionName) return null;
     
     setLoadingMotif(true);
+    const normalizedPrediction = predictionName.toLowerCase().trim();
+    const predictionWithoutBatik = normalizedPrediction.replace(/^batik\s+/, '').trim();
     
     try {
-      // Gunakan motifService (Database) sebagai sumber utama setelah seeding
       const response = await motifService.getAll();
       const motifs = Array.isArray(response.data) ? response.data : [];
-      
-      const normalizedPrediction = predictionName.toLowerCase().trim();
-      const predictionWithoutBatik = normalizedPrediction.replace(/^batik\s+/, '').trim();
       
       const matchedMotif = motifs.find((motif: any) => {
         const motifNameLower = motif.name.toLowerCase().trim();
