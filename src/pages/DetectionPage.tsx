@@ -2,8 +2,8 @@ import * as React from "react";
 import { useState, useContext, useEffect, lazy, Suspense } from "react";
 import { WastraContext } from "../context/WastraContext";
 import DetectionIntro from "../components/DetectionIntro";
-import { X } from "lucide-react";
-import { predictionService, motifService } from "../services/api";
+import { X, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { predictionService, motifService, ttsService } from "../services/api";
 const BatikArViewer = lazy(() => import("../components/BatikArViewer"));
 const RichMarkdown = lazy(() => import("../components/RichMarkdown"));
 import Footer from "../components/Footer";
@@ -61,6 +61,94 @@ const DetectionPage: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const [loadingSample, setLoadingSample] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(() => {
+    const saved = localStorage.getItem("voice_enabled");
+    return saved ? JSON.parse(saved) : true;
+  });
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const speakResult = async (text: string) => {
+    if (!isVoiceEnabled) return;
+    
+    // Stop any existing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
+    const cleanText = text
+      .replace(/#/g, ' tag ')
+      .replace(/\((.*?)\)/g, '') 
+      .trim();
+
+    try {
+      setIsSynthesizing(true);
+      const response = await ttsService.synthesize(cleanText);
+      const audioBlob = response.data;
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const audio = new Audio(audioUrl);
+      audio.playbackRate = 0.95; // Artikulasi vokal lebih jelas
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error("Edge TTS failed, falling back to Web Speech API", error);
+      
+      // Fallback logic using Web Speech API
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Find native Indonesian female voice
+      const idVoice = voices.find(v => v.lang.includes('id-ID') && (v.name.includes('Gadis') || v.name.includes('Damayanti'))) || 
+                      voices.find(v => v.lang.includes('id-ID'));
+      
+      if (idVoice) {
+        utterance.voice = idVoice;
+        utterance.lang = 'id-ID';
+      }
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
+  // Pre-load voices for browsers that load them asynchronously
+  useEffect(() => {
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("voice_enabled", JSON.stringify(isVoiceEnabled));
+  }, [isVoiceEnabled]);
+
+  // Stop speech when component unmounts or page refreshes
+  useEffect(() => {
+    const handleUnload = () => {
+      window.speechSynthesis.cancel();
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+    
+    return () => {
+      window.speechSynthesis.cancel();
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, []);
 
   const sampleImages = [
     { src: sample1, alt: "Batik sample 1" },
@@ -93,11 +181,7 @@ const DetectionPage: React.FC = () => {
     };
   }, [previewUrl]);
 
-  if (loading) {
-    return <p className="text-center mt-6 text-gray-900 dark:text-white">{t("detection.checkingLogin")}</p>;
-  }
-
-  if (!user) {
+  if (!user && !loading) {
     return <DetectionIntro />;
   }
 
@@ -252,19 +336,19 @@ const DetectionPage: React.FC = () => {
   };
 
   const fetchMotifByPrediction = async (predictionName: string) => {
-    if (!predictionName) return;
+    if (!predictionName) return null;
     
     setLoadingMotif(true);
-    setMotifData(null);
     
     try {
+      // Gunakan motifService (Database) sebagai sumber utama setelah seeding
       const response = await motifService.getAll();
       const motifs = Array.isArray(response.data) ? response.data : [];
       
       const normalizedPrediction = predictionName.toLowerCase().trim();
       const predictionWithoutBatik = normalizedPrediction.replace(/^batik\s+/, '').trim();
       
-      const matchedMotif = motifs.find((motif: MotifData) => {
+      const matchedMotif = motifs.find((motif: any) => {
         const motifNameLower = motif.name.toLowerCase().trim();
         const motifNameWithoutBatik = motifNameLower.replace(/^batik\s+/, '').trim();
         
@@ -280,16 +364,108 @@ const DetectionPage: React.FC = () => {
       });
       
       if (matchedMotif) {
-        setMotifData(matchedMotif);
-      } else {
-        setMotifData(null);
+        // Jika data dari DB, sudah dalam format MotifData
+        // Pastikan path image konsisten dengan /gallery/
+        const motifWithGalleryImage = {
+          ...matchedMotif,
+          image: matchedMotif.image.startsWith('/gallery/') 
+            ? matchedMotif.image 
+            : `/gallery/${getExactImageName(matchedMotif.name)}.jpg`
+        };
+        setMotifData(motifWithGalleryImage);
+        return motifWithGalleryImage;
       }
+      return null;
     } catch (err: any) {
-      console.error("Error fetching motifs:", err);
-      setMotifData(null);
+      console.error("Error fetching motifs from database:", err);
+      // Fallback terakhir ke galleryService jika DB gagal
+      try {
+        const galleryRes = await galleryService.getAll();
+        const galleryMotifs = Array.isArray(galleryRes.data) ? galleryRes.data : [];
+        const matched = galleryMotifs.find((item: any) => {
+          const name = item.name.toLowerCase();
+          return name.includes(predictionWithoutBatik) || predictionWithoutBatik.includes(name.replace('batik ', ''));
+        });
+        if (matched) {
+          const mapped = {
+            id: `gallery-${matched.index}`,
+            name: matched.name,
+            description: matched.philosophy,
+            image: `/gallery/${getExactImageName(matched.name)}.jpg`,
+            region: matched.location.split(",")[0].trim(),
+            province: matched.location,
+            tags: ["Batik", "Tradisional"]
+          };
+          setMotifData(mapped);
+          return mapped;
+        }
+      } catch (e) {
+        console.error("All fallback failed");
+      }
+      return null;
     } finally {
       setLoadingMotif(false);
     }
+  };
+
+  // Helper to get exact image name (copied from MotifExplorer for consistency)
+  const getExactImageName = (name: string) => {
+    const withoutBatik = name.replace("Batik ", "");
+    
+    if (withoutBatik.startsWith("Jakarta Ondelondel")) return "Jakarta_OndelOndel";
+    if (withoutBatik.startsWith("Jawa Barat")) return "JawaBarat_Megamendung";
+    if (withoutBatik.startsWith("Jawa Tengah")) {
+      const motifPart = withoutBatik.replace("Jawa Tengah ", "");
+      const complexMap: Record<string, string> = {
+        "Asemarang": "AsemArang", "Asemsinom": "AsemSinom", "Asemwarak": "AsemWarak",
+        "Cindewilis": "CindeWilis", "Gambangsemarangan": "GambangSemarangan",
+        "Ikankerang": "IkanKerang", "Jagunglombok": "JagungLombok",
+        "Jambubelimbing": "JambuBelimbing", "Jambucitra": "JambuCitra",
+        "Jayakusuma": "JayaKusuma", "Kembangsepatu": "KembangSepatu",
+        "Luriksemangka": "LurikSemangka", "Masjidagungdemak": "MasjidAgungDemak",
+        "Parangkusumo": "ParangKusumo", "Parangslobog": "ParangSlobog",
+        "Sarimulat": "SariMulat", "Sekargudhe": "SekarGudhe",
+        "Tanjunggunung": "TanjungGunung", "Tebubambu": "TebuBambu",
+        "Tugumuda": "TuguMuda", "Warakberasutah": "WarakBerasUtah",
+        "Worawarirumpuk": "WorawariRumpuk"
+      };
+      return `JawaTengah_${complexMap[motifPart] || motifPart}`;
+    }
+    if (withoutBatik.startsWith("Jawa Timur")) return `JawaTimur_${withoutBatik.replace("Jawa Timur ", "")}`;
+    if (withoutBatik.startsWith("Kalimantan Barat")) return `KalimantanBarat_${withoutBatik.replace("Kalimantan Barat ", "")}`;
+    if (withoutBatik.startsWith("Kalimantan Dayak")) return "Kalimantan_Dayak";
+    if (withoutBatik.startsWith("Lampunggajah")) return "Lampung_Gajah";
+    if (withoutBatik.startsWith("Lampung Kacang Hijau")) return "Lampung_KacangHijau";
+    if (withoutBatik.startsWith("Lampung Bledheg")) return "Lampung_Bledheg";
+    if (withoutBatik.startsWith("Malukupala")) return "Maluku_Pala";
+    if (withoutBatik.startsWith("NTB Lumbung")) return "NTB_Lumbung";
+    if (withoutBatik.startsWith("Papua")) return `Papua_${withoutBatik.replace("Papua ", "")}`;
+    if (withoutBatik.startsWith("Sulawesi Selatan")) return `SulawesiSelatan_${withoutBatik.replace("Sulawesi Selatan ", "")}`;
+    if (withoutBatik.startsWith("Sumatera Barat")) return `SumateraBarat_${withoutBatik.replace("Sumatera Barat ", "").replace(/\s/g, '')}`;
+    if (withoutBatik.startsWith("Sumatera Utara")) return `SumateraUtara_${withoutBatik.replace("Sumatera Utara ", "").replace(/\s/g, '')}`;
+    if (withoutBatik.startsWith("Yogyakarta")) {
+      const motifPart = withoutBatik.replace("Yogyakarta ", "");
+      const complexMap: Record<string, string> = {
+        "Cakarayam": "CakarAyam", "Ceplokliring": "CeplokLiring", "Jayakirana": "JayaKirana",
+        "Klampokarum": "KlampokArum", "Kuncupkanthil": "KuncupKanthil",
+        "Parangcurigo": "ParangCurigo", "Parangrusak": "ParangRusak", "Parangtuding": "ParangTuding",
+        "Sekarandhong": "SekarAndhong", "Sekarblimbing": "SekarBlimbing", "Sekarcengkeh": "SekarCengkeh",
+        "Sekardangan": "SekarDangan", "Sekardhuku": "SekarDhuku", "Sekardlima": "SekarDlima",
+        "Sekarduren": "SekarDuren", "Sekargambir": "SekarGambir", "Sekargayam": "SekarGayam",
+        "Sekarjagung": "SekarJagung", "Sekarjali": "SekarJali", "Sekarjeruk": "SekarJeruk",
+        "Sekarkeben": "SekarKeben", "Sekarkemuning": "SekarKemuning", "Sekarkenanga": "SekarKenanga",
+        "Sekarkenikir": "SekarKenikir", "Sekarkenthang": "SekarKenthang", "Sekarkepel": "SekarKepel",
+        "Sekarketongkeng": "SekarKetongkeng", "Sekarlintang": "SekarLintang", "Sekarmanggis": "SekarManggis",
+        "Sekarmenur": "SekarMenur", "Sekarmindi": "SekarMindi", "Sekarmlathi": "SekarMlathi",
+        "Sekarmrica": "SekarMrica", "Sekarmundhu": "SekarMundhu", "Sekarnangka": "SekarNangka",
+        "Sekarpacar": "SekarPacar", "Sekarpala": "SekarPala", "Sekarpijetan": "SekarPijetan",
+        "Sekarpudhak": "SekarPudhak", "Sekarrandhu": "SekarRandhu", "Sekarsawo": "SekarSawo",
+        "Sekarsoka": "SekarSoka", "Sekarsrengenge": "SekarSrengenge", "Sekarsrigadhing": "SekarSrigadhing",
+        "Sekartanjung": "SekarTanjung", "Sekartebu": "SekarTebu"
+      };
+      return `Yogyakarta_${complexMap[motifPart] || motifPart}`;
+    }
+    return withoutBatik.replace(" ", "_");
   };
 
   const handleProcess = async () => {
@@ -301,6 +477,12 @@ const DetectionPage: React.FC = () => {
     setProcessing(true);
     setError(null);
     setRetryMessage(null);
+    
+    // Silent trigger for speech synthesis to "unlock" on mobile/Chrome
+    if (isVoiceEnabled) {
+      const silent = new SpeechSynthesisUtterance("");
+      window.speechSynthesis.speak(silent);
+    }
 
     const formData = new FormData();
     formData.append("image", selectedImage);
@@ -310,7 +492,8 @@ const DetectionPage: React.FC = () => {
       if (!token) throw new Error("Kamu harus login terlebih dahulu!");
 
       const onRetry = (attempt: number, delay: number) => {
-        setRetryMessage(`Service sedang memulai (percobaan ${attempt}/3). Menunggu ${delay/1000} detik...`);
+        const messageKey = `detection.retry${attempt}`;
+        setRetryMessage(t(messageKey) || `Menghubungkan ke server... (${attempt}/3)`);
       };
       const response = await predictionService.predict(formData, 3, onRetry);
       const json: DetectionResponse = response.data;
@@ -318,9 +501,32 @@ const DetectionPage: React.FC = () => {
 
       if (json.success && json.data) {
         console.log("Setting result to:", json.data);
+        
+        // 1. Fetch static data immediately to have it ready
+        const staticData = await fetchMotifByPrediction(json.data.prediction);
+
+        // 2. Cek apakah Gemini mengembalikan narasi yang valid
+        const aiText = json.data.aiNarrative || "";
+        const isInvalid = aiText.includes("belum tersedia") || 
+                         aiText.includes("database") || 
+                         aiText.includes("limit") || 
+                         aiText.length < 20;
+
+        if (isInvalid && staticData) {
+          console.log("Gemini narrative is invalid or missing, using static fallback");
+          json.data.aiNarrative = staticData.description;
+        }
+
         setResult(json.data);
         setRetryMessage(null);
-        await fetchMotifByPrediction(json.data.prediction);
+        
+        // Speak result
+        const confidencePercent = (json.data.confidence * 100).toFixed(0);
+        const narrative = json.data.aiNarrative || "";
+        const speechText = t("lang") === "id" 
+          ? `Hasil deteksi: ${json.data.prediction}. Tingkat keyakinan ${confidencePercent} persen. ${narrative}`
+          : `Detection result: ${json.data.prediction}. Confidence level ${confidencePercent} percent. ${narrative}`;
+        speakResult(speechText);
       } else {
         setError("Response backend tidak valid");
       }
@@ -398,7 +604,7 @@ const DetectionPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="grid-hero-bg relative">
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h1 className="text-3xl font-bold text-center mb-3 text-gray-800 dark:text-white">
@@ -411,8 +617,8 @@ const DetectionPage: React.FC = () => {
         <div
           className={`relative z-10 border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
             isDragging
-              ? "border-amber-500 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30"
-              : `${result ? "bg-white dark:bg-gray-900" : "bg-white/80 dark:bg-gray-900/70"} border-gray-100 dark:border-gray-700 hover:border-amber-600 dark:hover:border-amber-600 hover:shadow-lg`
+              ? "border-amber-600 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/30"
+              : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-700 hover:border-amber-600 dark:hover:border-amber-600 hover:shadow-lg"
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -551,7 +757,7 @@ const DetectionPage: React.FC = () => {
               type="button"
               onClick={() => loadSampleImage(img.src)}
               disabled={loadingSample}
-              className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
               aria-label={`Sample image ${idx + 1}`}
             >
               <img
@@ -571,7 +777,7 @@ const DetectionPage: React.FC = () => {
             disabled={processing}
             className={`px-6 py-3 rounded-lg text-white font-medium transition shadow-md ${
               processing
-                ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                ? "bg-gray-400 dark:bg-gray-900 cursor-not-allowed"
                 : "bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-600"
             }`}
           >
@@ -581,9 +787,17 @@ const DetectionPage: React.FC = () => {
       )}
 
       {retryMessage && (
-        <p className="mt-4 text-center text-amber-600 font-medium animate-pulse">
-          {retryMessage}
-        </p>
+        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-2xl flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-2 w-2 rounded-full bg-amber-600 animate-ping"></div>
+            <p className="text-amber-700 dark:text-amber-400 font-semibold text-sm md:text-base text-center leading-relaxed">
+              {retryMessage}
+            </p>
+          </div>
+          <div className="w-48 h-1 bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden">
+            <div className="h-full bg-amber-600 animate-pulse rounded-full"></div>
+          </div>
+        </div>
       )}
       
       {error && (
@@ -591,31 +805,80 @@ const DetectionPage: React.FC = () => {
       )}
 
       {result && (
-        <div className="mt-8 p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 relative">
-          <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-xl" style={{ zIndex: -1 }} />
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
+        <div className="mt-8 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 backdrop-blur-sm">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white order-1">
               {result.prediction}
             </h2>
-            <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-sm font-medium rounded-full">
-              {(result.confidence * 100).toFixed(2)}%
-            </span>
+            
+            <div className="flex items-center gap-3 order-2">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-1.5 pr-3 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm">
+                <button
+                  onClick={() => {
+                    const newState = !isVoiceEnabled;
+                    setIsVoiceEnabled(newState);
+                    if (!newState) {
+                      if (audioRef.current) {
+                        audioRef.current.pause();
+                        audioRef.current = null;
+                      }
+                      window.speechSynthesis.cancel();
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+                    isVoiceEnabled ? "bg-amber-600" : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      isVoiceEnabled ? "translate-x-5" : "translate-x-1"
+                    } flex items-center justify-center`}
+                  >
+                    {isVoiceEnabled ? (
+                      <Volume2 className="w-2.5 h-2.5 text-amber-600" />
+                    ) : (
+                      <VolumeX className="w-2.5 h-2.5 text-gray-400" />
+                    )}
+                  </span>
+                </button>
+                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${isVoiceEnabled ? "text-amber-600" : "text-gray-400"}`}>
+                  Voice
+                </span>
+              </div>
+
+              {isVoiceEnabled && (
+                <button
+                  onClick={() => {
+                    const confidencePercent = (result.confidence * 100).toFixed(0);
+                    const narrative = result.aiNarrative || "";
+                    const speechText = t("lang") === "id" 
+                      ? `Hasil deteksi: ${result.prediction}. Tingkat keyakinan ${confidencePercent} persen. ${narrative}`
+                      : `Detection result: ${result.prediction}. Confidence level ${confidencePercent} percent. ${narrative}`;
+                    speakResult(speechText);
+                  }}
+                  disabled={isSynthesizing}
+                  className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300 ${
+                    isSynthesizing
+                      ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 animate-pulse"
+                      : "bg-amber-600 text-white hover:bg-amber-700 shadow-md active:scale-90"
+                  }`}
+                  title={t("lang") === "id" ? "Putar ulang suara" : "Play again"}
+                >
+                  {isSynthesizing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+
+              <span className="px-3 py-1.5 bg-amber-600/10 text-amber-600 dark:text-amber-400 text-sm font-bold rounded-full border border-amber-600/20 whitespace-nowrap">
+                {(result.confidence * 100).toFixed(2)}%
+              </span>
+            </div>
           </div>
 
-          {result.aiNarrative && (
-            <div className="mb-6 p-5 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/40 dark:to-gray-900 rounded-xl shadow-md border border-amber-200 dark:border-amber-700">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-amber-100 mb-3">
-                Filosofi & cerita motif
-              </h3>
-              
-              <div className="text-gray-800 dark:text-gray-100 leading-relaxed prose prose-amber dark:prose-invert max-w-none">
-                <Suspense fallback={<div className="text-sm text-gray-500 dark:text-gray-400">Memuat deskripsi motif...</div>}>
-                  <RichMarkdown markdown={result.aiNarrative} />
-                </Suspense>
-              </div>
-            </div>
-          )}
-          
           {(motifData?.image || previewUrl) && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
@@ -631,70 +894,49 @@ const DetectionPage: React.FC = () => {
             </div>
           )}
 
-          {loadingMotif ? (
-            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
-              <div className="flex items-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-amber-600 dark:text-amber-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                <p className="text-amber-700 dark:text-amber-400 text-sm">Memuat deskripsi motif...</p>
-              </div>
-            </div>
-          ) : motifData ? (
-            <div className="mb-6 p-5 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-                Tentang Motif {motifData.name}
+          {/* Filosofi & Cerita Motif */}
+          {result.aiNarrative ? (
+            <div className="mb-6 p-5 bg-amber-600/10 dark:bg-amber-600/10 rounded-xl shadow-sm border border-amber-600/30">
+              <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-400 mb-3">
+                Filosofi & cerita motif
               </h3>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                {motifData.description}
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                {motifData.region && (
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full">
-                    {motifData.region}
-                  </span>
-                )}
-                {motifData.province && (
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full">
-                    {motifData.province}
-                  </span>
-                )}
-                {motifData.tags && motifData.tags.length > 0 && 
-                  motifData.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))
-                }
+              
+              <div className="text-gray-800 dark:text-gray-200 leading-relaxed prose prose-amber dark:prose-invert max-w-none">
+                <Suspense fallback={<div className="text-sm text-gray-500 dark:text-gray-400">Memuat deskripsi motif...</div>}>
+                  <RichMarkdown markdown={result.aiNarrative} />
+                </Suspense>
               </div>
-            </div>
-          ) : !result.aiNarrative ? (
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-              <p className="text-gray-500 dark:text-gray-400 text-sm italic">
-                Deskripsi untuk motif "{result.prediction}" belum tersedia di database.
-              </p>
+
+              {/* Tampilkan Region & Province di dalam blok yang sama jika ada di motifData */}
+              {motifData && (
+                <div className="flex gap-2 mt-4 pt-4 border-t border-amber-600/20 flex-wrap">
+                  {motifData.region && (
+                    <span className="px-3 py-1 bg-amber-600/20 dark:bg-amber-600/20 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full uppercase tracking-wider">
+                      {motifData.region}
+                    </span>
+                  )}
+                  {motifData.province && (
+                    <span className="px-3 py-1 bg-amber-600/20 dark:bg-amber-600/20 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-full uppercase tracking-wider">
+                      {motifData.province}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ) : null}
+
+          {/* Hapus blok "Tentang Motif" dan blok error limit yang lama */}
+          {loadingMotif && !result.aiNarrative && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <p className="text-amber-700 dark:text-amber-400 text-sm">Mencari detail motif di database...</p>
+              </div>
+            </div>
+          )}
 
           {Array.isArray(result.top_predictions) &&
           result.top_predictions.length > 0 ? (
@@ -706,10 +948,10 @@ const DetectionPage: React.FC = () => {
                 {result.top_predictions.map((p, i) => (
                   <li
                     key={i}
-                    className="flex justify-between items-center bg-white/50 dark:bg-gray-800/50 px-4 py-2 rounded-lg shadow-sm"
+                    className="flex justify-between items-center bg-amber-600/5 dark:bg-amber-600/10 px-4 py-2 rounded-lg border border-amber-600/10"
                   >
-                    <span className="font-medium text-gray-800 dark:text-white">{p.class_name}</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium text-gray-800 dark:text-gray-200">{p.class_name}</span>
+                    <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
                       {(p.confidence * 100).toFixed(2)}%
                     </span>
                   </li>

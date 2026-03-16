@@ -42,7 +42,7 @@ const DetectionIntro: React.FC = () => {
   };
 
   return (
-    <section className="relative bg-white dark:bg-gray-900 py-10 overflow-hidden transition-colors">
+    <section className="relative bg-white dark:bg-gray-900 py-10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div className="animate-slide-in-left flex flex-col items-center md:items-start text-center md:text-left">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">

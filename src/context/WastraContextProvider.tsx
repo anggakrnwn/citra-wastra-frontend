@@ -13,24 +13,43 @@ interface AuthResponse {
 }
 
 export const WastraContextProvider = ({ children }: WastraContextProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
     if (token && savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
         if (!parsed.role) parsed.role = "user";
-        setUser(parsed);
+        return parsed;
       } catch {
-        localStorage.removeItem("user");
-        setUser(null);
+        return null;
       }
     }
-    setLoading(false);
-  }, [token]);
+    return null;
+  });
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedUser = localStorage.getItem("user");
+      const savedToken = localStorage.getItem("token");
+      setToken(savedToken);
+      if (savedToken && savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          setUser(parsed);
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {

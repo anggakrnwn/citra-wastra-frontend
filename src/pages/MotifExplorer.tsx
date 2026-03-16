@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { X, Search } from "lucide-react";
+import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import type { MotifItem } from "../assets/data/dataset";
-import api, { motifService } from "../services/api";
+import api, { motifService, galleryService } from "../services/api";
 import { WILAYAH_API_URL } from "../../config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "../context/I18nContext";
@@ -27,6 +27,18 @@ const PremiumBadge = ({ children }: { children: React.ReactNode }) => (
 const DetailModal = ({ item, onClose }: { item: MotifItem | null; onClose: () => void }) => {
   const [description, setDescription] = useState(item?.description);
   const [loadingDesc, setLoadingDesc] = useState(false);
+
+  useEffect(() => {
+    if (item) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [item]);
 
   useEffect(() => {
     if (item && item.description === "Klik untuk melihat detail filosofi motif ini.") {
@@ -56,9 +68,9 @@ const DetailModal = ({ item, onClose }: { item: MotifItem | null; onClose: () =>
           <button
             onClick={onClose}
             aria-label="Tutup detail"
-            className="absolute left-4 top-4 md:hidden rounded-full bg-black/40 backdrop-blur-md p-2 text-white hover:bg-black/60 transition"
+            className="absolute right-4 top-12 md:hidden z-20 rounded-full bg-black/60 backdrop-blur-md p-3 text-white hover:bg-black/80 transition-all shadow-2xl border border-white/20 active:scale-90"
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6" />
           </button>
         </div>
 
@@ -275,14 +287,44 @@ const MotifExplorer: React.FC = () => {
  useEffect(() => {
   const fetchData = async () => {
     try {
-      const dbres = await motifService.getAll();
-      let resdata = Array.isArray(dbres.data) ? dbres.data : [];
+      // Prioritaskan mengambil data gallery dari backend yang baru dibuat
+      const galleryRes = await galleryService.getAll();
+      const galleryData = Array.isArray(galleryRes.data) ? galleryRes.data : [];
 
-      // Gunakan langsung data dari API karena user menghubungkan ke production DB
-      setMotifs(resdata);
-
+      if (galleryData.length > 0) {
+        const mappedData: MotifItem[] = galleryData.map((item: any) => {
+          const fileName = getExactImageName(item.name);
+          return {
+            id: `gallery-${item.index}`,
+            name: item.name,
+            image: `/gallery/${fileName}.jpg`,
+            description: item.description || item.philosophy || "Detail filosofi motif ini belum tersedia.",
+            province: item.location,
+            region: item.location.split(",")[0].trim() as any,
+            tags: ["Batik", "Tradisional"],
+            createdAt: new Date().toISOString()
+          };
+        });
+        setMotifs(mappedData);
+      } else {
+        // Fallback ke motifService jika gallery kosong
+        const dbres = await motifService.getAll();
+        let resdata = Array.isArray(dbres.data) ? dbres.data : [];
+        setMotifs(resdata);
+      }
     } catch (err) {
-      console.log("Error API, menggunakan sepenuhnya data class_names.json");
+      console.log("Error API gallery, mencoba motifService atau fallback local");
+      try {
+        const dbres = await motifService.getAll();
+        let resdata = Array.isArray(dbres.data) ? dbres.data : [];
+        if (resdata.length > 0) {
+          setMotifs(resdata);
+          return;
+        }
+      } catch (e) {
+        console.log("Error motifService, menggunakan local fallback");
+      }
+      
       const localData = batikNames.map((name, index) => {
         const fileName = getExactImageName(name);
         
@@ -356,74 +398,94 @@ const MotifExplorer: React.FC = () => {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-[#FAFAFA] dark:bg-[#0B0C10] transition-colors min-h-screen relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-white dark:bg-gray-900 transition-colors min-h-screen relative overflow-hidden grid-hero-bg">
       <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-amber-500/10 to-transparent dark:from-amber-600/5 pointer-events-none -translate-y-1/2 rounded-full blur-3xl opacity-60 mix-blend-multiply dark:mix-blend-lighten"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="text-3xl font-bold text-center mb-3 text-gray-800 dark:text-white">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center mb-4 text-gray-900 dark:text-white leading-tight">
             {t("gallery.title")}
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             {t("gallery.description")}
           </p>
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl border border-white/40 dark:border-gray-800 p-4 md:p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-12 flex flex-col md:flex-row gap-4 sticky top-24 z-20">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-3 md:p-4 rounded-3xl shadow-xl mb-12 flex flex-col sm:flex-row gap-3 sticky top-20 z-30 transition-all">
           <div className="relative flex-1 group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
             </div>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("gallery.searchPlaceholder")}
-              className="block w-full pl-11 pr-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 transition-all"
+              className="block w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all outline-none"
             />
           </div>
 
-          <div className="flex gap-4 md:w-auto w-full">
-            <div className="relative flex-1 md:w-56">
-              <select
-                value={selectedProvinceId}
-                onChange={(e) => setSelectedProvinceId(e.target.value)}
-                className="block w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white"
-              >
-                <option value="">{t("gallery.allProvinces")}</option>
-                {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
+          <div className="flex gap-2 sm:w-64">
+            <select
+              value={selectedProvinceId}
+              onChange={(e) => setSelectedProvinceId(e.target.value)}
+              className="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all outline-none appearance-none cursor-pointer"
+            >
+              <option value="">{t("gallery.allProvinces")}</option>
+              {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
           </div>
         </div>
 
         {/* Gallery Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-96 w-full rounded-[28px]" />
+              <Skeleton key={i} className="h-[400px] w-full rounded-[32px]" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <h3 className="text-xl font-medium text-gray-500 dark:text-gray-400">Tidak ada motif yang ditemukan.</h3>
+          <div className="text-center py-24 bg-white/50 dark:bg-gray-800/50 rounded-[32px] border border-dashed border-gray-300 dark:border-gray-700">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 mb-4">
+              <Search className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("gallery.noMotifs") || "Tidak ada motif yang ditemukan"}</h3>
+            <p className="text-gray-500 dark:text-gray-400">{t("maps.noMatch").replace("{q}", query) || "Coba kata kunci lain atau bersihkan filter."}</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {paginatedData.map((item) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
+              {paginatedData.map((item, idx) => (
               <button
                 key={item.id}
                 onClick={() => setDetail(item)}
-                className="group relative flex flex-col items-start bg-white dark:bg-gray-900 rounded-[28px] overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-amber-200 text-left transition-all duration-500 transform hover:-translate-y-1"
+                className="group relative flex flex-col items-start bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-[32px] overflow-hidden border border-gray-100 dark:border-gray-700 hover:border-amber-500/50 text-left transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-amber-500/10 transform hover:-translate-y-2"
+                style={{ animationDelay: `${idx * 50}ms` }}
               >
-                <div className="relative h-60 w-full overflow-hidden">
-                  <img src={item.image} alt={item.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="relative h-64 w-full overflow-hidden">
+                  <img src={item.image} alt={item.name} className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                    <span className="text-white text-xs font-bold tracking-widest uppercase bg-amber-600 px-3 py-1 rounded-full">{t("lang") === "id" ? "Lihat Detail" : "View Detail"}</span>
+                  </div>
                 </div>
                 <div className="p-6 md:p-8 flex flex-col flex-1 w-full">
-                  <span className="text-xs font-bold uppercase text-amber-600 mb-2">{item.province || item.region}</span>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 font-serif">{item.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed mb-4">{item.description}</p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md">{item.region}</span>
+                    <div className="h-px flex-1 bg-gray-100 dark:bg-gray-700/50"></div>
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 font-serif line-clamp-1 group-hover:text-amber-600 transition-colors">
+                    {item.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed mb-6 flex-grow overflow-hidden">
+                    {item.description}
+                  </p>
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50 dark:border-gray-700/50 w-full">
+                    <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      {item.province}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+                  </div>
                 </div>
               </button>
               ))}
@@ -431,53 +493,84 @@ const MotifExplorer: React.FC = () => {
             
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-12 mb-8">
+              <div className="flex justify-center items-center gap-1 sm:gap-2 mt-12 mb-8 px-2 w-full max-w-full overflow-hidden">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="h-10 w-10 sm:w-auto sm:px-4 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-1 shadow-sm shrink-0 active:scale-95"
+                  aria-label="Halaman sebelumnya"
                 >
-                  {t("gallery.previously") || "Sebelumnya"}
+                  <ChevronLeft className="h-5 w-5" />
+                  <span className="hidden sm:inline text-sm">{t("gallery.previously") || "Sebelumnya"}</span>
                 </button>
                 
-                <div className="flex space-x-1">
-                  {Array.from({ length: totalPages }).map((_, i) => {
-                    const pageNumber = i + 1;
-                    // Tampilkan maksimal 5 tombol halaman: awal, akhir, dan sekitarnya
-                    if (
-                      pageNumber === 1 || 
-                      pageNumber === totalPages || 
-                      (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
-                    ) {
-                      return (
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1">
+                  {(() => {
+                    const pages = [];
+                    // Responsive visible pages
+                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+                    const maxVisible = isMobile ? 3 : 5;
+                    
+                    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                    let end = Math.min(totalPages, start + maxVisible - 1);
+                    
+                    if (end - start + 1 < maxVisible) {
+                      start = Math.max(1, end - maxVisible + 1);
+                    }
+
+                    if (start > 1) {
+                      pages.push(
                         <button
-                          key={pageNumber}
-                          onClick={() => handlePageChange(pageNumber)}
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-medium transition-all ${
-                            currentPage === pageNumber
-                              ? "bg-amber-500 text-white shadow-md"
-                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                          }`}
+                          key={1}
+                          onClick={() => handlePageChange(1)}
+                          className="w-10 h-10 rounded-xl flex items-center justify-center font-medium transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm shrink-0 active:scale-95"
                         >
-                          {pageNumber}
+                          1
                         </button>
                       );
-                    } else if (
-                      (pageNumber === currentPage - 2 && currentPage > 3) || 
-                      (pageNumber === currentPage + 2 && currentPage < totalPages - 2)
-                    ) {
-                      return <span key={pageNumber} className="px-2 py-2 text-gray-500">...</span>;
+                      if (start > 2) pages.push(<span key="start-dots" className="px-0.5 text-gray-400">...</span>);
                     }
-                    return null;
-                  })}
+
+                    for (let p = start; p <= end; p++) {
+                      pages.push(
+                        <button
+                          key={p}
+                          onClick={() => handlePageChange(p)}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-medium transition-all shrink-0 active:scale-95 ${
+                            currentPage === p
+                              ? "bg-amber-600 text-white shadow-md scale-105 z-10 border border-amber-700"
+                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    }
+
+                    if (end < totalPages) {
+                      if (end < totalPages - 1) pages.push(<span key="end-dots" className="px-0.5 text-gray-400">...</span>);
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          onClick={() => handlePageChange(totalPages)}
+                          className="w-10 h-10 rounded-xl flex items-center justify-center font-medium transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm shrink-0 active:scale-95"
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+                    return pages;
+                  })()}
                 </div>
 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="h-10 w-10 sm:w-auto sm:px-4 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-1 shadow-sm shrink-0 active:scale-95"
+                  aria-label="Halaman selanjutnya"
                 >
-                  {t("gallery.next") || "Selanjutnya"}
+                  <span className="hidden sm:inline text-sm">{t("gallery.next") || "Selanjutnya"}</span>
+                  <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
             )}
