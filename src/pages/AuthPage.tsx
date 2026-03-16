@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useWastra } from "../context/WastraContext";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import wastralogo from "../assets/logosecond.svg";
+import wastralogo from "/logosecond.svg";
 import { useI18n } from "../context/I18nContext";
 
 declare global {
