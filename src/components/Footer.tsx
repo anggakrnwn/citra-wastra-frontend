@@ -1,10 +1,12 @@
 import React from "react";
 import { Link, useNavigate  } from "react-router-dom";
 import { useWastra } from "../context/WastraContext";
+import { useI18n } from "../context/I18nContext";
 
 const Footer: React.FC = () => {
   const { user } = useWastra();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const handleLaunchApp = () => {
     if (user) {
@@ -20,14 +22,13 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Citra Wastra</h3>
             <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 max-w-sm">
-              Preserving Indonesia's batik heritage through AI-powered recognition
-              and cultural storytelling.
+              {t("footer.tagline")}
             </p>
           </div>
 
           <div>
             <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-              Navigation
+              {t("footer.nav")}
             </h4>
             <ul className="space-y-3">
               <li>
@@ -36,7 +37,7 @@ const Footer: React.FC = () => {
                   className="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-500 transition-colors inline-block"
                   onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                 >
-                  Home
+                  {t("footer.home")}
                 </Link>
               </li>
               <li>
@@ -44,7 +45,7 @@ const Footer: React.FC = () => {
                   to="/about" 
                   className="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-500 transition-colors inline-block"
                 >
-                  About
+                  {t("footer.about")}
                 </Link>
               </li>
               <li>
@@ -52,7 +53,7 @@ const Footer: React.FC = () => {
                   onClick={handleLaunchApp} 
                   className="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-500 transition-colors inline-block"
                 >
-                  Try the App
+                  {t("footer.tryApp")}
                 </button>
               </li>
             </ul>
@@ -60,11 +61,11 @@ const Footer: React.FC = () => {
 
           <div>
             <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-              Contact Us
+              {t("footer.contact")}
             </h4>
             <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
               <li>
-                Email:{" "}
+                {t("footer.email")}{" "}
                 <a
                   href="mailto:info@citrawastra.com"
                   className="hover:text-amber-600 dark:hover:text-amber-500 transition-colors"
@@ -73,7 +74,7 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                Phone:{" "}
+                {t("footer.phone")}{" "}
                 <a
                   href="tel:+621234567890"
                   className="hover:text-amber-600 dark:hover:text-amber-500 transition-colors"
@@ -81,13 +82,13 @@ const Footer: React.FC = () => {
                   +62 812-2724-5907
                 </a>
               </li>
-              <li>Location: Purwokerto, Indonesia</li>
+              <li>{t("footer.location")} {t("footer.locationValue")}</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-200 dark:border-gray-700 pt-8 text-center text-sm text-gray-500 dark:text-gray-500">
-          © {new Date().getFullYear()} Citra Wastra. All rights reserved.
+          © {new Date().getFullYear()} Citra Wastra. {t("footer.copyright")}
         </div>
       </div>
     </footer>

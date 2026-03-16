@@ -248,8 +248,8 @@ const AdminPredictionReview = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <div className="flex-1 relative">
+      <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="w-full md:flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -266,7 +266,7 @@ const AdminPredictionReview = () => {
           value={statusFilter}
           onValueChange={(value: "all" | "pending" | "approved" | "rejected") => setStatusFilter(value)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
@@ -285,10 +285,11 @@ const AdminPredictionReview = () => {
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               {selectedIds.length} prediction(s) selected
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button
                 size="sm"
                 variant="outline"
+                className="flex-1 sm:flex-initial"
                 onClick={() => setSelectedIds([])}
               >
                 Clear
@@ -297,7 +298,7 @@ const AdminPredictionReview = () => {
                 size="sm"
                 onClick={() => handleBatchReview("approved")}
                 disabled={batchReviewing}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 sm:flex-initial bg-green-600"
               >
                 Approve Selected
               </Button>
@@ -305,7 +306,7 @@ const AdminPredictionReview = () => {
                 size="sm"
                 onClick={() => handleBatchReview("rejected")}
                 disabled={batchReviewing}
-                className="bg-red-600 hover:bg-red-700 text-white"
+               className="flex-1 sm:flex-initial bg-red-600"
               >
                 Reject Selected
               </Button>
@@ -352,14 +353,14 @@ const AdminPredictionReview = () => {
 
                   {/* Details */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 dark:text-white truncate">
                           {pred.user.name || pred.user.email}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{pred.user.email}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate break-all">{pred.user.email}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 self-start">
                         {pred.status === "pending" && (
                           <input
                             type="checkbox"
@@ -378,7 +379,7 @@ const AdminPredictionReview = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-1 mb-3">
+                    <div className="space-y-1 mb-3 break-words">
                       <p className="text-sm">
                         <span className="font-medium text-gray-700 dark:text-gray-300">Prediction:</span>{" "}
                         <span className="text-gray-900 dark:text-white">{pred.prediction}</span>
