@@ -66,6 +66,16 @@ const AdminMotif: React.FC = () => {
     total: 0,
     totalPages: 0,
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterProvince, setFilterProvince] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -138,6 +148,8 @@ const AdminMotif: React.FC = () => {
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
       });
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (filterProvince) params.append("province", filterProvince);
 
       const res = await motifService.getAll(params.toString());
 
@@ -164,7 +176,7 @@ const AdminMotif: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, debouncedSearch, filterProvince]);
 
   useEffect(() => {
     fetchMotifs();
@@ -370,6 +382,35 @@ const AdminMotif: React.FC = () => {
             Export JSON
           </button>
         </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-4 mb-8 flex flex-col md:flex-row gap-4 transition-colors">
+        <input
+          type="text"
+          placeholder="Cari nama motif..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPagination((prev) => ({ ...prev, page: 1 }));
+          }}
+          className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+        />
+        <select
+          value={filterProvince}
+          onChange={(e) => {
+            setFilterProvince(e.target.value);
+            setPagination((prev) => ({ ...prev, page: 1 }));
+          }}
+          className="w-full md:w-64 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500"
+        >
+          <option value="">Semua Provinsi</option>
+          {provinces.map((province) => (
+            <option key={province.id} value={province.name}>
+              {province.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <form
