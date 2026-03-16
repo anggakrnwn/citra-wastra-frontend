@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useWastra } from "../../context/WastraContext";
 import { toast } from "react-hot-toast";
-import wastralogo from "../../assets/logosecond.svg";
+import wastralogo from "/logosecond.svg";
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useWastra();
