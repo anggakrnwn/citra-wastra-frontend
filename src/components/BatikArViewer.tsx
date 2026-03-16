@@ -159,19 +159,21 @@ const BatikArViewer: React.FC<{ textureUrl: string; className?: string; modelSrc
   return (
     <div className={className}>
       <div className="mb-4 flex gap-2 items-center">
-        <span className="text-sm font-medium">Model:</span>
-        <select
-          className="border rounded px-2 py-1 text-sm bg-white"
-          value={resolvedSrc}
-          onChange={(e) => setResolvedSrc(e.target.value)}
-        >
-          {models.map((m) => (
-            <option key={m.src} value={m.src}>{m.name}</option>
-          ))}
-        </select>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Model:</span>
+          <select
+            className="border rounded px-2 py-1 text-sm bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 outline-none"
+            value={resolvedSrc}
+            onChange={(e) => setResolvedSrc(e.target.value)}
+          >
+            {models.map((m) => (
+              <option key={m.src} value={m.src} className="dark:bg-gray-800">
+                {m.name}
+              </option>
+            ))}
+          </select>
       </div>
 
-      <div className="rounded-xl border bg-gray-50 overflow-hidden">
+     <div className="rounded-xl border bg-gray-50 dark:bg-gray-900 dark:border-gray-800 overflow-hidden">
         <ModelViewerEl
           ref={ref}
           src={resolvedSrc}

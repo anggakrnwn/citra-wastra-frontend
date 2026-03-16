@@ -7,17 +7,19 @@ const DetectionPage = lazy(() => import("./DetectionPage"));
 export default function DetectionWrapper() {
   const { user, loading } = useWastra();
 
-  if (loading) {
-    return <div className="p-4 text-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">Loading...</div>;
-  }
-
-  if (!user) {
-    return <DetectIntro />;
+  if (!user && !loading) {
+    return (
+      <div className="animate-in fade-in duration-700">
+        <DetectIntro />
+      </div>
+    );
   }
 
   return (
-    <Suspense fallback={<div className="p-4 text-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">Memuat halaman deteksi...</div>}>
-      <DetectionPage />
-    </Suspense>
+    <div className="min-h-screen animate-in fade-in duration-700">
+      <Suspense fallback={null}>
+        <DetectionPage />
+      </Suspense>
+    </div>
   );
 }

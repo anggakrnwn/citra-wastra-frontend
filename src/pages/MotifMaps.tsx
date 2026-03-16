@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { motifService } from "../services/api";
+import { motifService, galleryService } from "../services/api";
 import { useI18n } from "../context/I18nContext";
 
 interface MotifItem {
@@ -92,14 +92,151 @@ const MotifMaps: React.FC = () => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([-2.5489, 118.0149]);
   const [mapZoom, setMapZoom] = useState(5);
 
+  // Helper to get exact image name based on the public/gallery files
+  const getExactImageName = (name: string) => {
+    const withoutBatik = name.replace("Batik ", "");
+    
+    if (withoutBatik.startsWith("Jakarta Ondelondel")) return "Jakarta_OndelOndel";
+    if (withoutBatik.startsWith("Jawa Barat")) return "JawaBarat_Megamendung";
+    if (withoutBatik.startsWith("Jawa Tengah")) {
+      const motifPart = withoutBatik.replace("Jawa Tengah ", "");
+      const complexMap: Record<string, string> = {
+        "Asemarang": "AsemArang",
+        "Asemsinom": "AsemSinom",
+        "Asemwarak": "AsemWarak",
+        "Cindewilis": "CindeWilis",
+        "Gambangsemarangan": "GambangSemarangan",
+        "Ikankerang": "IkanKerang",
+        "Jagunglombok": "JagungLombok",
+        "Jambubelimbing": "JambuBelimbing",
+        "Jambucitra": "JambuCitra",
+        "Jayakusuma": "JayaKusuma",
+        "Kembangsepatu": "KembangSepatu",
+        "Luriksemangka": "LurikSemangka",
+        "Masjidagungdemak": "MasjidAgungDemak",
+        "Parangkusumo": "ParangKusumo",
+        "Parangslobog": "ParangSlobog",
+        "Sarimulat": "SariMulat",
+        "Sekargudhe": "SekarGudhe",
+        "Tanjunggunung": "TanjungGunung",
+        "Tebubambu": "TebuBambu",
+        "Tugumuda": "TuguMuda",
+        "Warakberasutah": "WarakBerasUtah",
+        "Worawarirumpuk": "WorawariRumpuk"
+      };
+      return `JawaTengah_${complexMap[motifPart] || motifPart}`;
+    }
+    if (withoutBatik.startsWith("Jawa Timur")) {
+      return `JawaTimur_${withoutBatik.replace("Jawa Timur ", "")}`;
+    }
+    if (withoutBatik.startsWith("Kalimantan Barat")) {
+      return `KalimantanBarat_${withoutBatik.replace("Kalimantan Barat ", "")}`;
+    }
+    if (withoutBatik.startsWith("Kalimantan Dayak")) return "Kalimantan_Dayak";
+    if (withoutBatik.startsWith("Lampunggajah")) return "Lampung_Gajah";
+    if (withoutBatik.startsWith("Lampung Kacang Hijau")) return "Lampung_KacangHijau";
+    if (withoutBatik.startsWith("Lampung Bledheg")) return "Lampung_Bledheg";
+    if (withoutBatik.startsWith("Malukupala")) return "Maluku_Pala";
+    if (withoutBatik.startsWith("NTB Lumbung")) return "NTB_Lumbung";
+    if (withoutBatik.startsWith("Papua")) {
+       return `Papua_${withoutBatik.replace("Papua ", "")}`;
+    }
+    if (withoutBatik.startsWith("Sulawesi Selatan")) {
+      return `SulawesiSelatan_${withoutBatik.replace("Sulawesi Selatan ", "")}`;
+    }
+    if (withoutBatik.startsWith("Sumatera Barat")) {
+      return `SumateraBarat_${withoutBatik.replace("Sumatera Barat ", "").replace(/\s/g, '')}`;
+    }
+    if (withoutBatik.startsWith("Sumatera Utara")) {
+      return `SumateraUtara_${withoutBatik.replace("Sumatera Utara ", "").replace(/\s/g, '')}`;
+    }
+    if (withoutBatik.startsWith("Yogyakarta")) {
+      const motifPart = withoutBatik.replace("Yogyakarta ", "");
+      const complexMap: Record<string, string> = {
+        "Cakarayam": "CakarAyam",
+        "Ceplokliring": "CeplokLiring",
+        "Jayakirana": "JayaKirana",
+        "Klampokarum": "KlampokArum",
+        "Kuncupkanthil": "KuncupKanthil",
+        "Parangcurigo": "ParangCurigo",
+        "Parangrusak": "ParangRusak",
+        "Parangtuding": "ParangTuding",
+        "Sekarandhong": "SekarAndhong",
+        "Sekarblimbing": "SekarBlimbing",
+        "Sekarcengkeh": "SekarCengkeh",
+        "Sekardangan": "SekarDangan",
+        "Sekardhuku": "SekarDhuku",
+        "Sekardlima": "SekarDlima",
+        "Sekarduren": "SekarDuren",
+        "Sekargambir": "SekarGambir",
+        "Sekargayam": "SekarGayam",
+        "Sekarjagung": "SekarJagung",
+        "Sekarjali": "SekarJali",
+        "Sekarjeruk": "SekarJeruk",
+        "Sekarkeben": "SekarKeben",
+        "Sekarkemuning": "SekarKemuning",
+        "Sekarkenanga": "SekarKenanga",
+        "Sekarkenikir": "SekarKenikir",
+        "Sekarkenthang": "SekarKenthang",
+        "Sekarkepel": "SekarKepel",
+        "Sekarketongkeng": "SekarKetongkeng",
+        "Sekarlintang": "SekarLintang",
+        "Sekarmanggis": "SekarManggis",
+        "Sekarmenur": "SekarMenur",
+        "Sekarmindi": "SekarMindi",
+        "Sekarmlathi": "SekarMlathi",
+        "Sekarmrica": "SekarMrica",
+        "Sekarmundhu": "SekarMundhu",
+        "Sekarnangka": "SekarNangka",
+        "Sekarpacar": "SekarPacar",
+        "Sekarpala": "SekarPala",
+        "Sekarpijetan": "SekarPijetan",
+        "Sekarpudhak": "SekarPudhak",
+        "Sekarrandhu": "SekarRandhu",
+        "Sekarsawo": "SekarSawo",
+        "Sekarsoka": "SekarSoka",
+        "Sekarsrengenge": "SekarSrengenge",
+        "Sekarsrigadhing": "SekarSrigadhing",
+        "Sekartanjung": "SekarTanjung",
+        "Sekartebu": "SekarTebu"
+      };
+      return `Yogyakarta_${complexMap[motifPart] || motifPart}`;
+    }
+    return withoutBatik.replace(" ", "_");
+  };
+
   useEffect(() => {
     const fetchMotifs = async () => {
       try {
-        const res = await motifService.getAll();
-        const data = Array.isArray(res.data) ? res.data : [];
-        setMotifs(data);
+        // Coba ambil data dari galleryService dulu (sama seperti MotifExplorer)
+        const galleryRes = await galleryService.getAll();
+        const galleryData = Array.isArray(galleryRes.data) ? galleryRes.data : [];
+
+        if (galleryData.length > 0) {
+          const mappedData: MotifItem[] = galleryData.map((item: any) => ({
+            id: `gallery-${item.index}`,
+            name: item.name,
+            image: `/gallery/${getExactImageName(item.name)}.jpg`,
+            description: item.philosophy,
+            province: item.location,
+            region: item.location.split(",")[0].trim(),
+            tags: ["Batik", "Tradisional"],
+          }));
+          setMotifs(mappedData);
+        } else {
+          const res = await motifService.getAll();
+          const data = Array.isArray(res.data) ? res.data : [];
+          setMotifs(data);
+        }
       } catch (err) {
-        setMotifs([]);
+        console.error("Error fetching motifs for map:", err);
+        try {
+          const res = await motifService.getAll();
+          const data = Array.isArray(res.data) ? res.data : [];
+          setMotifs(data);
+        } catch (e) {
+          setMotifs([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -111,17 +248,21 @@ const MotifMaps: React.FC = () => {
     if (motifs.length === 0) return;
 
     const motifMarkers: MotifMarker[] = [];
-    const processedProvinces = new Set<string>();
+    
+    // Gunakan jitter agar marker tidak bertumpuk sempurna di koordinat provinsi yang sama
+    const jitter = () => (Math.random() - 0.5) * 0.45; // Offset sekitar 0.45 derajat
 
     motifs.forEach((motif) => {
-      const provinceParts = motif.province.split(",").map((p) => p.trim().toUpperCase());
-      const provinceName = provinceParts[provinceParts.length - 1]; 
-
-      const key = `${provinceName}-${motif.name}`;
-      if (processedProvinces.has(key)) return;
-      processedProvinces.add(key);
-
-      const position: [number, number] = PROVINCE_COORDINATES[provinceName] || [-2.5489, 118.0149];
+      // Ambil bagian pertama sebagai provinsi (misal: "Bali, Denpasar" -> "Bali")
+      const provinceName = motif.province.split(",")[0].trim().toUpperCase();
+      
+      const basePosition: [number, number] = PROVINCE_COORDINATES[provinceName] || [-2.5489, 118.0149];
+      
+      // Tambahkan jitter ke posisi
+      const position: [number, number] = [
+        basePosition[0] + jitter(),
+        basePosition[1] + jitter()
+      ];
 
       motifMarkers.push({
         motif,
@@ -164,8 +305,10 @@ const MotifMaps: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 dark:border-amber-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">{lang === "id" ? "Memuat peta motif batik..." : "Loading batik motif map..."}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">
+            {lang === "id" ? "Memuat peta motif batik..." : "Loading batik motif map..."}
+          </p>
         </div>
       </div>
     );

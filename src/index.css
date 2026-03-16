@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200;
+  }
+}
+
 .custom-select-arrow {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.75rem center;
@@ -99,6 +105,14 @@
     animation: float 3s ease-in-out infinite;
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   .delay-0 {
     animation-delay: 0s;
   }
@@ -151,26 +165,26 @@
     --radius: 0.5rem;
   }
   .dark {
-    /* Lighten dark theme to improve contrast comfort */
-    --background: 220 15% 15%;
+    /* Set to gray-900 (#111827) for true dark consistency */
+    --background: 222 47% 11%;
     --foreground: 0 0% 96%;
-    --card: 220 14% 18%;
+    --card: 222 47% 13%;
     --card-foreground: 0 0% 96%;
-    --popover: 220 14% 18%;
+    --popover: 222 47% 11%;
     --popover-foreground: 0 0% 96%;
     --primary: 0 0% 98%;
-    --primary-foreground: 220 15% 15%;
-    --secondary: 220 12% 22%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 47% 18%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 220 10% 24%;
-    --muted-foreground: 220 6% 70%;
-    --accent: 220 12% 22%;
+    --muted: 222 47% 18%;
+    --muted-foreground: 222 6% 70%;
+    --accent: 222 47% 18%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 26%;
-    --input: 220 10% 26%;
-    --ring: 220 15% 65%;
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 38 92% 50%; /* amber-600 */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

@@ -150,6 +150,20 @@ export const authService = {
   },
 };
 
+export const galleryService = {
+  getAll: () => {
+    return api.get("/api/gallery");
+  },
+};
+
+export const ttsService = {
+  synthesize: (text: string) => {
+    return api.post("/api/tts/synthesize", { text }, {
+      responseType: 'blob'
+    });
+  },
+};
+
 export const motifService = {
   getAll: (params?: string) => {
     const url = params ? `/api/motifs?${params}` : "/api/motifs";

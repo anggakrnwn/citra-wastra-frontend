@@ -10,19 +10,12 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, adminOnly, superAdminOnly }: ProtectedRouteProps) => {
   const { user, loading } = useWastra();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"
-          aria-label="Loading..."
-        ></div>
-      </div>
-    );
+  if (!user && !loading) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (loading || !user) {
+    return null;
   }
 
   if (superAdminOnly && user.role !== "super_admin") {

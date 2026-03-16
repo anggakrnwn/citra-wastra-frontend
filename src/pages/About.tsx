@@ -58,7 +58,7 @@ const About: React.FC = () => {
               <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-amber-700 dark:text-amber-500">
                 {t("about.title1")}
               </h1>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-amber-600 dark:text-amber-400">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-amber-700 dark:text-amber-500">
                 {t("about.title2")}
               </h2>
               <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300 mb-6 max-w-3xl mx-auto">
@@ -82,7 +82,7 @@ const About: React.FC = () => {
             <h2 className="text-3xl font-bold text-center text-amber-700 dark:text-amber-500 mb-8 relative z-10">
               {t("about.whyTitle")}
             </h2>
-            <div className="bg-gradient-to-br bg-amber-600/5 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-8 shadow-lg relative z-10">
+            <div className="bg-gradient-to-br bg-amber-600/5 hover:bg-amber-600/10 rounded-2xl p-8 shadow-lg relative z-10">
               <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300 mb-6 italic">
                 {t("about.whyQuote")}
               </p>
