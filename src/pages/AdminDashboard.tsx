@@ -112,50 +112,6 @@ const AdminDashboard = () => {
     fetchDashboardData();
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Header Skeleton */}
-        <div className="flex justify-between items-start">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-80" />
-            <Skeleton className="h-3 w-40" />
-          </div>
-          <Skeleton className="h-10 w-32" />
-        </div>
-
-        {/* Table Card Skeleton */}
-        <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-40" />
-            
-            <div className="mt-8 space-y-6">
-              {/* Table Header Placeholder */}
-              <div className="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              
-              {/* Table Rows Placeholder */}
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-4 w-12" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -168,15 +124,15 @@ const AdminDashboard = () => {
             Complete overview of batik management system data
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            Last updated: {stats?.lastUpdated || "-"}
+            Last updated: {stats?.lastUpdated || (loading ? "Loading..." : "-")}
           </p>
         </div>
         <Button
           onClick={handleRefresh}
-          disabled={refreshing}
+          disabled={refreshing || loading}
           className="bg-amber-600 hover:bg-amber-700 text-white"
         >
-          {refreshing ? "Refreshing..." : "Refresh Data"}
+          {refreshing || loading ? "Refreshing..." : "Refresh Data"}
         </Button>
       </div>
 
@@ -189,148 +145,169 @@ const AdminDashboard = () => {
           Statistik utama sistem
         </p>
         
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
-                  Metrik
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
-                  Jumlah
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
-                  Detail
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                  Total Motif
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                  {stats?.totalMotifs || 0}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                  Data terbaru
-                </td>
-                <td className="py-3 px-4">
-                  <a
-                    href="/admin/motifs"
-                    className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
-                  >
-                    Lihat →
-                  </a>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                  Total Prediksi
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                  {stats?.totalPredictions || 0}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                  Data terbaru
-                </td>
-                <td className="py-3 px-4">
-                  <a
-                    href="/admin/prediction-history"
-                    className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
-                  >
-                    Lihat →
-                  </a>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                  Aktivitas Hari Ini
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                  {stats?.todayPredictions || 0}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                  Minggu ini: {stats?.weekPredictions || 0}
-                  {stats?.monthPredictions !== undefined && ` | Bulan ini: ${stats.monthPredictions}`}
-                </td>
-                <td className="py-3 px-4">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Hari ini</span>
-                </td>
-              </tr>
-              {user?.role !== "super_admin" && stats?.pendingPredictions !== undefined && (
-                <tr>
+        {loading && !stats ? (
+          <div className="mt-8 space-y-6">
+            {/* Table Header Placeholder */}
+            <div className="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            
+            {/* Table Rows Placeholder */}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
+                    Metrik
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
+                    Jumlah
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
+                    Detail
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
                   <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                    Pending Reviews
+                    Total Motif
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                    {stats.pendingPredictions}
+                    {stats?.totalMotifs || 0}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                    {stats.reviewedByMe || 0} reviewed by me
+                    Data terbaru
                   </td>
                   <td className="py-3 px-4">
                     <a
-                      href="/admin/prediction-review"
+                      href="/admin/motifs"
                       className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
                     >
-                      Review →
+                      Lihat →
                     </a>
                   </td>
                 </tr>
-              )}
-              {user?.role === "super_admin" && stats?.pendingPredictions !== undefined && (
-                <>
-                  <tr className="border-b border-gray-100 dark:border-gray-800">
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
-                      Approved Predictions
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                      {stats.approvedPredictions || 0}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                      Data terbaru
-                    </td>
-                    <td className="py-3 px-4">
-                      <a
-                        href="/admin/prediction-history?status=approved"
-                        className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
-                      >
-                        Lihat →
-                      </a>
-                    </td>
-                  </tr>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
+                    Total Prediksi
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    {stats?.totalPredictions || 0}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                    Data terbaru
+                  </td>
+                  <td className="py-3 px-4">
+                    <a
+                      href="/admin/prediction-history"
+                      className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
+                    >
+                      Lihat →
+                    </a>
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
+                    Aktivitas Hari Ini
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    {stats?.todayPredictions || 0}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                    Minggu ini: {stats?.weekPredictions || 0}
+                    {stats?.monthPredictions !== undefined && ` | Bulan ini: ${stats.monthPredictions}`}
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Hari ini</span>
+                  </td>
+                </tr>
+                {user?.role !== "super_admin" && stats?.pendingPredictions !== undefined && (
                   <tr>
                     <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
                       Pending Reviews
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                      {stats.pendingPredictions || 0}
+                      {stats.pendingPredictions}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                      Needs review
+                      {stats.reviewedByMe || 0} reviewed by me
                     </td>
                     <td className="py-3 px-4">
                       <a
-                        href="/admin/prediction-review?status=pending"
+                        href="/admin/prediction-review"
                         className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
                       >
                         Review →
                       </a>
                     </td>
                   </tr>
-                </>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+                {user?.role === "super_admin" && stats?.pendingPredictions !== undefined && (
+                  <>
+                    <tr className="border-b border-gray-100 dark:border-gray-800">
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
+                        Approved Predictions
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                        {stats.approvedPredictions || 0}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                        Data terbaru
+                      </td>
+                      <td className="py-3 px-4">
+                        <a
+                          href="/admin/prediction-history?status=approved"
+                          className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
+                        >
+                          Lihat →
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
+                        Pending Reviews
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                        {stats.pendingPredictions || 0}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                        Needs review
+                      </td>
+                      <td className="py-3 px-4">
+                        <a
+                          href="/admin/prediction-review?status=pending"
+                          className="text-amber-600 dark:text-amber-500 hover:underline text-sm"
+                        >
+                          Review →
+                        </a>
+                      </td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );
 };
 
 export default AdminDashboard;
-
