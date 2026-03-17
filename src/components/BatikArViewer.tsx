@@ -1,5 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import "@google/model-viewer";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 // --- Types ---
 type BaseColorTexture = { setTexture: (tex: unknown) => void; };
@@ -160,17 +167,20 @@ const BatikArViewer: React.FC<{ textureUrl: string; className?: string; modelSrc
     <div className={className}>
       <div className="mb-4 flex gap-2 items-center">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Model:</span>
-          <select
-            className="border rounded px-2 py-1 text-sm bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 outline-none"
-            value={resolvedSrc}
-            onChange={(e) => setResolvedSrc(e.target.value)}
-          >
-            {models.map((m) => (
-              <option key={m.src} value={m.src} className="dark:bg-gray-800">
-                {m.name}
-              </option>
-            ))}
-          </select>
+        <div className="w-32">
+          <Select value={resolvedSrc} onValueChange={setResolvedSrc}>
+            <SelectTrigger className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+              <SelectValue placeholder="Select Model" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+              {models.map((m) => (
+                <SelectItem key={m.src} value={m.src}>
+                  {m.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
      <div className="rounded-xl border bg-gray-50 dark:bg-gray-900 dark:border-gray-800 overflow-hidden">

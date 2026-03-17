@@ -208,35 +208,48 @@ const MotifMaps: React.FC = () => {
   useEffect(() => {
     const fetchMotifs = async () => {
       try {
-        // Coba ambil data dari galleryService dulu (sama seperti MotifExplorer)
-        const galleryRes = await galleryService.getAll();
-        const galleryData = Array.isArray(galleryRes.data) ? galleryRes.data : [];
+        // Fetch with a large limit to get all motifs for the map
+        const res = await motifService.getAll("limit=1000");
+        let data = [];
+        
+        if (res.data && res.data.success) {
+          data = Array.isArray(res.data.data) ? res.data.data : [];
+        } else {
+          data = Array.isArray(res.data) ? res.data : [];
+        }
 
-        if (galleryData.length > 0) {
-          const mappedData: MotifItem[] = galleryData.map((item: any) => ({
-            id: `gallery-${item.index}`,
+        if (data.length > 0) {
+          const mappedData: MotifItem[] = data.map((item: any) => ({
+            id: item.id || `motif-${Math.random()}`,
             name: item.name,
-            image: `/gallery/${getExactImageName(item.name)}.jpg`,
-            description: item.philosophy,
-            province: item.location,
-            region: item.location.split(",")[0].trim(),
-            tags: ["Batik", "Tradisional"],
+            image: item.image,
+            description: item.description,
+            province: item.province || "Unknown",
+            region: item.region || "",
+            tags: item.tags || ["Batik", "Tradisional"],
           }));
           setMotifs(mappedData);
         } else {
-          const res = await motifService.getAll();
-          const data = Array.isArray(res.data) ? res.data : [];
-          setMotifs(data);
+          // Fallback to galleryService if motifService is empty
+          const galleryRes = await galleryService.getAll();
+          const galleryData = Array.isArray(galleryRes.data) ? galleryRes.data : [];
+          
+          if (galleryData.length > 0) {
+            const mappedData: MotifItem[] = galleryData.map((item: any) => ({
+              id: `gallery-${item.index}`,
+              name: item.name,
+              image: `/gallery/${getExactImageName(item.name)}.jpg`,
+              description: item.philosophy,
+              province: item.location,
+              region: item.location.split(",")[0].trim(),
+              tags: ["Batik", "Tradisional"],
+            }));
+            setMotifs(mappedData);
+          }
         }
       } catch (err) {
         console.error("Error fetching motifs for map:", err);
-        try {
-          const res = await motifService.getAll();
-          const data = Array.isArray(res.data) ? res.data : [];
-          setMotifs(data);
-        } catch (e) {
-          setMotifs([]);
-        }
+        setMotifs([]);
       } finally {
         setLoading(false);
       }
