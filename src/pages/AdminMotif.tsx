@@ -44,6 +44,57 @@ interface Pagination {
 const AdminMotif = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [provinceFilter, setProvinceFilter] = useState("all");
+
+  // Helper function for client-side image compression
+  const compressImage = (file: File): Promise<File | Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error("Canvas to Blob failed"));
+              }
+            },
+            "image/jpeg",
+            0.7 // quality
+          );
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 10,
@@ -244,11 +295,16 @@ const AdminMotif = () => {
       // 2. Start immediate upload to Cloudinary
       setUploading(true);
       const startTime = Date.now();
-      console.log(`[Upload] Starting upload for: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
       
       try {
+        // Compress image before uploading
+        console.log(`[Upload] Original size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+        const compressedBlob = await compressImage(file);
+        console.log(`[Upload] Compressed size: ${(compressedBlob.size / 1024 / 1024).toFixed(2)} MB`);
+        
         const uploadFormData = new FormData();
-        uploadFormData.append("image", file);
+        uploadFormData.append("image", compressedBlob, file.name.replace(/\.[^/.]+$/, ".jpg"));
+        
         const uploadRes = await uploadService.upload(uploadFormData) as { data: { imageUrl: string } };
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
