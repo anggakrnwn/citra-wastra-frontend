@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -22,11 +21,6 @@ interface User {
   name: string | null;
   role: "user" | "admin" | "super_admin";
   createdAt: string;
-}
-
-interface ApiError {
-  message?: string;
-  errors?: Array<{ field: string; message: string }>;
 }
 
 interface Pagination {
@@ -71,7 +65,7 @@ const AdminUsers = () => {
         limit: pagination.limit.toString(),
       });
 
-      const res = await userService.getAll(params.toString());
+      const res = await userService.getAll(params.toString()) as any;
 
       if (res.data && res.data.success) {
         const data = res.data.data || [];
@@ -85,9 +79,8 @@ const AdminUsers = () => {
           : res.data?.users || [];
         setUsers(data);
       }
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      toast.error(error.response?.data?.message || "Failed to fetch users");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to fetch users");
       setUsers([]);
     } finally {
       setLoading(false);
@@ -98,13 +91,11 @@ const AdminUsers = () => {
     setUpdating(id);
     try {
       await userService.updateRole(id, role);
-
       // Refresh users list to get latest data from server
       await fetchUsers();
       toast.success("Role updated successfully");
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      toast.error(error.response?.data?.message || "Failed to update role");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update role");
     } finally {
       setUpdating(null);
     }
@@ -129,9 +120,8 @@ const AdminUsers = () => {
         fetchUsers();
       }
       toast.success("User deleted successfully");
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      toast.error(error.response?.data?.message || "Failed to delete user");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to delete user");
     } finally {
       setDeleting(null);
       setDeleteId(null);
@@ -164,11 +154,10 @@ const AdminUsers = () => {
         password: "",
         role: "user",
       });
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      const errorMessage = error.response?.data?.message || "Failed to create user";
-      if (error.response?.data?.errors) {
-        const errors = (error.response.data.errors as any[]).map((e: any) => e.message).join(", ");
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || "Failed to create user";
+      if (err.response?.data?.errors) {
+        const errors = (err.response.data.errors as any[]).map((e: any) => e.message).join(", ");
         toast.error(errors);
       } else {
         toast.error(errorMessage);
@@ -251,7 +240,7 @@ const AdminUsers = () => {
 
       <div className="space-y-4">
         {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
+          Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="p-4 bg-transparent border border-gray-100 dark:border-gray-700">
               <div className="flex justify-between items-center">
                 <div>

@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Save, RefreshCw, Settings as SettingsIcon } from "lucide-react";
 import { useWastra } from "@/context/WastraContext";
@@ -48,15 +47,14 @@ const Settings = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const res = await settingsService.getAll();
+      const res = await settingsService.getAll() as any;
       if (res.data && res.data.success) {
         const newSettings = res.data.data || {};
         setSettings(newSettings);
         
       }
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to fetch settings");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to fetch settings");
     } finally {
       setLoading(false);
     }
@@ -95,35 +93,16 @@ const Settings = () => {
       }
       
       // Send category to backend to ensure it's saved correctly
-      const response = await settingsService.update(normalizedKey, currentValue.trim(), description || undefined, category);
+      const response = await settingsService.update(normalizedKey, currentValue.trim(), description || undefined, category) as any;
       
       if (response.data && response.data.success && response.data.data) {
-        updateLocalSetting(category, normalizedKey, currentValue.trim());
-        
-        toast.success("Setting updated successfully");
-        
-        // Refetch after a short delay to sync with server (avoid rate limit)
-        setTimeout(async () => {
-          await fetchSettings();
-        }, 500);
-      } else {
-        throw new Error("Failed to save setting: Invalid response from server");
-      }
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      const errorMessage = error.response?.data?.message || "Failed to update setting";
-      
-      // Check if it's a rate limit error
-      if (error.response?.status === 429 || errorMessage.toLowerCase().includes("too many")) {
-        toast.error("Too many requests. Please wait a moment before trying again.");
-      } else {
-        toast.error(errorMessage);
-      }
-      
-      // Only refetch on error to restore correct state (with delay to avoid rate limit)
-      setTimeout(() => {
+        toast.success(`Settings ${normalizedKey} updated successfully`);
         fetchSettings();
-      }, 1000);
+      } else {
+        toast.error(`Failed to update ${normalizedKey}: ` + (response.data?.message || "Unknown error"));
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to update settings");
     } finally {
       setSaving(null);
     }
@@ -185,11 +164,33 @@ const Settings = () => {
     });
   };
 
-  if (loading) {
+  if (loading && Object.keys(settings).length === 0) {
     return (
       <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <Skeleton className="h-10 w-24" />
+        </div>
+
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-64 bg-transparent border border-gray-100 dark:border-gray-700" />
+          <Card key={i} className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center mb-4">
+              <Skeleton className="w-5 h-5 mr-2" />
+              <Skeleton className="h-6 w-32" />
+            </div>
+            <Skeleton className="h-4 w-64 mb-6" />
+            <div className="space-y-6">
+              {[1, 2].map((j) => (
+                <div key={j} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+          </Card>
         ))}
       </div>
     );

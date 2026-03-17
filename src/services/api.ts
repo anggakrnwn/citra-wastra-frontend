@@ -3,7 +3,7 @@ import axios from "axios";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // Create axios instance
-const api = axios.create({
+const api: any = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -12,14 +12,14 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
+  (config: any) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: any) => Promise.reject(error)
 );
 
 // Navigation callback for auth redirects
@@ -31,8 +31,8 @@ export function setAuthRedirectCallback(callback: (path: string) => void) {
 
 // Response interceptor to handle auth errors and maintenance mode
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: any) => response,
+  (error: any) => {
     // Handle maintenance mode (503)
     if (error.response?.status === 503 && error.response?.data?.maintenance) {
       // Don't redirect for maintenance mode, just show the error message
@@ -164,26 +164,28 @@ export const ttsService = {
   },
 };
 
+export const uploadService = {
+  upload: (formData: FormData) => {
+    return api.post("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+};
+
 export const motifService = {
   getAll: (params?: string) => {
     const url = params ? `/api/motifs?${params}` : "/api/motifs";
     return api.get(url);
   },
 
-  create: (formData: FormData) => {
-    return api.post("/api/motifs", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  create: (data: any) => {
+    return api.post("/api/motifs", data);
   },
 
-  update: (id: string, formData: FormData) => {
-    return api.put(`/api/motifs/${id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  update: (id: string, data: any) => {
+    return api.put(`/api/motifs/${id}`, data);
   },
 
   delete: (id: string) => {
@@ -294,16 +296,6 @@ export const predictionHistoryService = {
   },
 };
 
-export const uploadService = {
-  upload: (formData: FormData) => {
-    return api.post("/api/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  },
-};
-
 export const predictionReviewService = {
   getForReview: (params?: string) => {
     const url = params ? `/api/predict/review?${params}` : "/api/predict/review";
@@ -348,6 +340,11 @@ export const activityLogsService = {
     const url = params ? `/api/logs?${params}` : "/api/logs";
     return api.get(url);
   },
+
+  clear: (olderThanDays?: number) => {
+    const url = olderThanDays ? `/api/logs/clear?olderThanDays=${olderThanDays}` : "/api/logs/clear";
+    return api.delete(url);
+  },
 };
 
 export const settingsService = {
@@ -370,6 +367,24 @@ export const settingsService = {
 
   delete: (key: string) => {
     return api.delete(`/api/settings/${key}`);
+  },
+};
+
+export const wilayahService = {
+  getProvinces: () => {
+    return api.get("/api/wilayah/provinces");
+  },
+
+  getRegencies: (provinceId: string) => {
+    return api.get(`/api/wilayah/regencies/${provinceId}`);
+  },
+
+  getDistricts: (regencyId: string) => {
+    return api.get(`/api/wilayah/districts/${regencyId}`);
+  },
+
+  getVillages: (districtId: string) => {
+    return api.get(`/api/wilayah/villages/${districtId}`);
   },
 };
 

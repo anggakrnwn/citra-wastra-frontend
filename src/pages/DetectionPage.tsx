@@ -493,7 +493,7 @@ const DetectionPage: React.FC = () => {
         const messageKey = `detection.retry${attempt}`;
         setRetryMessage(t(messageKey) || `Menghubungkan ke server... (${attempt}/3)`);
       };
-      const response = await predictionService.predict(formData, 3, onRetry);
+      const response = await predictionService.predict(formData, 3, onRetry) as any;
       const json: DetectionResponse = response.data;
       console.log("=== API PREDICTION RESPONSE ===", json);
 

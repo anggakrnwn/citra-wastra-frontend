@@ -96,6 +96,7 @@ function App() {
               <Route path="/admin/statistics" element={<Statistics />} />
               <Route path="/admin/system-logs" element={<ProtectedRoute superAdminOnly><SystemLogs /></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute superAdminOnly><Settings /></ProtectedRoute>} />
+              <Route path="/admin/profile" element={<Profile />} />
             </Route>
 
             <Route path="/forbidden" element={<ForbiddenPage />} />

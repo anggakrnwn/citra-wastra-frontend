@@ -45,7 +45,7 @@ const DetailModal = ({ item, onClose }: { item: MotifItem | null; onClose: () =>
       setLoadingDesc(true);
       const queryParams = item.id ? `id=${item.id}&name=${encodeURIComponent(item.name)}` : `name=${encodeURIComponent(item.name)}`;
       api.get(`/api/philosophy?${queryParams}`)
-        .then(res => setDescription(res.data.philosophy))
+        .then((res: any) => setDescription(res.data.philosophy))
         .catch(() => setDescription("Gagal memuat deskripsi."))
         .finally(() => setLoadingDesc(false));
     }

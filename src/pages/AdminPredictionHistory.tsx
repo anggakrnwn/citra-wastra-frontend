@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Trash2, Download, Search, X, Image as ImageIcon } from "lucide-react";
 
@@ -29,11 +28,6 @@ interface Pagination {
   limit: number;
   total: number;
   totalPages: number;
-}
-
-interface ApiError {
-  message?: string;
-  error?: string;
 }
 
 const AdminPredictionHistory = () => {
@@ -67,7 +61,7 @@ const AdminPredictionHistory = () => {
           params.append("search", searchTerm);
         }
 
-        const res = await predictionHistoryService.getAll(params.toString(), signal);
+        const res = await predictionHistoryService.getAll(params.toString(), signal) as any;
 
         if (signal?.aborted) return;
         if (myId !== fetchIdRef.current) return;
@@ -81,24 +75,23 @@ const AdminPredictionHistory = () => {
           setHistory([]);
           toast.error(res.data?.message || "Gagal mengambil data prediction history");
         }
-      } catch (err) {
-        const error = err as AxiosError<ApiError>;
-        if (error.code === "ERR_CANCELED" || error.name === "CanceledError") {
+      } catch (err: any) {
+        if (err.code === "ERR_CANCELED" || err.name === "CanceledError") {
           return;
         }
         if (myId !== fetchIdRef.current) return;
-        const status = error.response?.status;
+        const status = err.response?.status;
         if (status === 429) {
-          const retryAfter = parseInt(error.response?.headers?.["retry-after"] ?? "25", 10) || 25;
+          const retryAfter = parseInt(err.response?.headers?.["retry-after"] ?? "25", 10) || 25;
           setRateLimitRetrySeconds(retryAfter);
           setLoading(false);
           setTimeout(() => fetchHistory(), retryAfter * 1000);
           return;
         }
         const errorMessage =
-          error.response?.data?.error ||
-          error.response?.data?.message ||
-          error.message ||
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          err.message ||
           "Gagal mengambil data prediction history";
         toast.error(errorMessage);
       } finally {
@@ -136,9 +129,8 @@ const AdminPredictionHistory = () => {
       await predictionHistoryService.delete(id);
       toast.success("Prediction history berhasil dihapus");
       fetchHistory();
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      toast.error(error.response?.data?.message || "Gagal menghapus prediction history");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Gagal menghapus prediction history");
     } finally {
       setDeleting(null);
     }
@@ -159,9 +151,8 @@ const AdminPredictionHistory = () => {
       toast.success(`${selectedIds.length} prediction history berhasil dihapus`);
       setSelectedIds([]);
       fetchHistory();
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      toast.error(error.response?.data?.message || "Gagal menghapus prediction history");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Gagal menghapus prediction history");
     }
   };
 
@@ -169,9 +160,8 @@ const AdminPredictionHistory = () => {
     try {
       await predictionHistoryService.export(format);
       toast.success(`Data berhasil diunduh dalam format ${format.toUpperCase()}`);
-    } catch (err) {
-      const error = err as AxiosError<ApiError>;
-      toast.error(error.response?.data?.message || "Gagal mengunduh data");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Gagal mengunduh data");
     }
   };
 
@@ -271,7 +261,7 @@ const AdminPredictionHistory = () => {
 
           {loading ? (
             <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <Skeleton key={i} className="h-20 w-full" />
               ))}
             </div>

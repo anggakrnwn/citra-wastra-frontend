@@ -142,12 +142,41 @@ const Statistics = () => {
       : []),
   ];
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="space-y-6">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-64 bg-transparent border border-gray-100 dark:border-gray-700" />
-        ))}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-24" />
+        </div>
+
+        {/* Overview Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="w-12 h-12 rounded-full" />
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+              <Skeleton className="h-6 w-40 mb-6" />
+              <Skeleton className="h-[300px] w-full" />
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
