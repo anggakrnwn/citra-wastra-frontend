@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import useSWR from "swr";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { useWastra } from "../context/WastraContext";
 import { 
   Plus, 
   Search, 
