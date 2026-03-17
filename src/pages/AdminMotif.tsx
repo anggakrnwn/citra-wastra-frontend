@@ -58,7 +58,6 @@ const AdminMotif = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -158,7 +157,6 @@ const AdminMotif = () => {
       image: "",
     });
     setImagePreview(null);
-    setSelectedFile(null);
     setShowModal(true);
   };
 
@@ -214,7 +212,6 @@ const AdminMotif = () => {
       image: motif.image,
     });
     setImagePreview(motif.image);
-    setSelectedFile(null);
     setShowModal(true);
   };
 
