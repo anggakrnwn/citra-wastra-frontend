@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
+import useSWR from "swr";
 import { toast } from "react-hot-toast";
 import { Trash2, Download, Search, X, Image as ImageIcon } from "lucide-react";
 
@@ -14,7 +15,7 @@ interface PredictionHistory {
   imageName: string;
   prediction: string;
   confidence: number;
-  fullResult: any;
+  fullResult?: any;
   createdAt: string;
   user: {
     id: string;
@@ -31,93 +32,67 @@ interface Pagination {
 }
 
 const AdminPredictionHistory = () => {
-  const [history, setHistory] = useState<PredictionHistory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
-  const [rateLimitRetrySeconds, setRateLimitRetrySeconds] = useState<number | null>(null);
 
-  const fetchIdRef = useRef(0);
+  // 1. Generate SWR Key based on pagination and search
+  const swrKey = useMemo(() => {
+    const params = new URLSearchParams({
+      page: pagination.page.toString(),
+      limit: pagination.limit.toString(),
+    });
+    if (searchTerm) {
+      params.append("search", searchTerm);
+    }
+    return `/api/predict/admin/history?${params.toString()}`;
+  }, [pagination.page, pagination.limit, searchTerm]);
 
-  const fetchHistory = useCallback(
-    async (signal?: AbortSignal) => {
-      const myId = ++fetchIdRef.current;
-      setRateLimitRetrySeconds(null);
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: pagination.page.toString(),
-          limit: pagination.limit.toString(),
-        });
-        if (searchTerm) {
-          params.append("search", searchTerm);
-        }
-
-        const res = await predictionHistoryService.getAll(params.toString(), signal) as any;
-
-        if (signal?.aborted) return;
-        if (myId !== fetchIdRef.current) return;
-
-        if (res.data && res.data.success) {
-          const historyData = res.data.data || [];
-          const paginationData = res.data.pagination || pagination;
-          setHistory(historyData);
-          setPagination(paginationData);
-        } else {
-          setHistory([]);
-          toast.error(res.data?.message || "Gagal mengambil data prediction history");
-        }
-      } catch (err: any) {
-        if (err.code === "ERR_CANCELED" || err.name === "CanceledError") {
-          return;
-        }
-        if (myId !== fetchIdRef.current) return;
-        const status = err.response?.status;
-        if (status === 429) {
-          const retryAfter = parseInt(err.response?.headers?.["retry-after"] ?? "25", 10) || 25;
-          setRateLimitRetrySeconds(retryAfter);
-          setLoading(false);
-          setTimeout(() => fetchHistory(), retryAfter * 1000);
-          return;
-        }
-        const errorMessage =
-          err.response?.data?.error ||
-          err.response?.data?.message ||
-          err.message ||
-          "Gagal mengambil data prediction history";
-        toast.error(errorMessage);
-      } finally {
-        const isCurrent = myId === fetchIdRef.current;
-        const wasAborted = signal?.aborted === true;
-        if (isCurrent && !wasAborted) {
-          setLoading(false);
-        }
+  // 2. Fetch data using SWR
+  const { 
+    data: historyResponse, 
+    isLoading: loading, 
+    mutate,
+  } = useSWR(
+    swrKey,
+    async (url: string) => {
+      const query = url.split("?")[1] || "";
+      const res = await predictionHistoryService.getAll(query) as any;
+      if (res.data && res.data.success) {
+        return res.data;
       }
+      throw new Error(res.data?.message || "Gagal mengambil data");
     },
-    [pagination.page, pagination.limit, searchTerm]
+    {
+      keepPreviousData: true, // Crucial for smooth pagination
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+    }
   );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchHistory(controller.signal);
-    return () => controller.abort();
-  }, [fetchHistory]);
+  const history: PredictionHistory[] = historyResponse?.data || [];
 
+  // Sync pagination from server
   useEffect(() => {
-    if (rateLimitRetrySeconds === null || rateLimitRetrySeconds <= 0) return;
-    const t = setInterval(() => {
-      setRateLimitRetrySeconds((s) => (s === null || s <= 1 ? null : s - 1));
-    }, 1000);
-    return () => clearInterval(t);
-  }, [rateLimitRetrySeconds]);
+    if (historyResponse?.pagination) {
+      setPagination(prev => {
+        if (
+          prev.total !== historyResponse.pagination.total ||
+          prev.totalPages !== historyResponse.pagination.totalPages
+        ) {
+          return historyResponse.pagination;
+        }
+        return prev;
+      });
+    }
+  }, [historyResponse]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus prediction history ini?")) {
@@ -128,7 +103,7 @@ const AdminPredictionHistory = () => {
     try {
       await predictionHistoryService.delete(id);
       toast.success("Prediction history berhasil dihapus");
-      fetchHistory();
+      mutate(); // Optimistic update would be better, but mutate is safe
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Gagal menghapus prediction history");
     } finally {
@@ -150,7 +125,7 @@ const AdminPredictionHistory = () => {
       await predictionHistoryService.bulkDelete(selectedIds);
       toast.success(`${selectedIds.length} prediction history berhasil dihapus`);
       setSelectedIds([]);
-      fetchHistory();
+      mutate();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Gagal menghapus prediction history");
     }
@@ -167,7 +142,7 @@ const AdminPredictionHistory = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(history.map((h) => h.id));
+      setSelectedIds(history.map((h: PredictionHistory) => h.id));
     } else {
       setSelectedIds([]);
     }
@@ -267,20 +242,9 @@ const AdminPredictionHistory = () => {
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12">
-              {rateLimitRetrySeconds !== null ? (
-                <div className="space-y-2">
-                  <p className="text-amber-600 dark:text-amber-400 font-medium">
-                    Terlalu banyak request (429)
-                  </p>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    Data akan dimuat ulang otomatis dalam {rateLimitRetrySeconds} detik. Silakan tunggu.
-                  </p>
-                </div>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400">
-                  {searchTerm ? "Tidak ada prediction history yang ditemukan" : "Belum ada prediction history"}
-                </p>
-              )}
+              <p className="text-gray-500 dark:text-gray-400">
+                {searchTerm ? "Tidak ada prediction history yang ditemukan" : "Belum ada prediction history"}
+              </p>
             </div>
           ) : (
             <>
@@ -320,7 +284,7 @@ const AdminPredictionHistory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {history.map((item) => (
+                    {history.map((item: PredictionHistory) => (
                       <tr
                         key={item.id}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -523,7 +487,7 @@ const AdminPredictionHistory = () => {
               <button
                 onClick={async () => {
                   const imageUrl = predictionHistoryService.getImageUrl(viewingImage);
-                  const historyItem = history.find((h) => h.id === viewingImage);
+                  const historyItem = history.find((h: PredictionHistory) => h.id === viewingImage);
                   const filename = historyItem?.imageName || `prediction-${viewingImage}.png`;
                   
                   try {
@@ -579,7 +543,7 @@ const AdminPredictionHistory = () => {
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
                   {(() => {
-                    const historyItem = history.find((h) => h.id === viewingImage);
+                    const historyItem = history.find((h: PredictionHistory) => h.id === viewingImage);
                     if (historyItem?.createdAt) {
                       const createdDate = new Date(historyItem.createdAt);
                       const cutoffDate = new Date('2025-12-14');
@@ -594,7 +558,7 @@ const AdminPredictionHistory = () => {
             </div>
             <div className="px-4 pb-4 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {history.find((h) => h.id === viewingImage)?.imageName || "Image"}
+                {history.find((h: PredictionHistory) => h.id === viewingImage)?.imageName || "Image"}
               </p>
             </div>
           </div>
