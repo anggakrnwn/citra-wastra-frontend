@@ -78,8 +78,12 @@ const DetectionPage: React.FC = () => {
     }
     
     const cleanText = text
-      .replace(/#/g, ' tag ')
-      .replace(/\((.*?)\)/g, '') 
+      .replace(/\*\*(.*?)\*\*/g, '$1') // remove bold
+      .replace(/\*(.*?)\*/g, '$1')     // remove italic
+      .replace(/#/g, ' ')              // remove hash
+      .replace(/\((.*?)\)/g, '')       // remove parenthesized text
+      .replace(/\n+/g, ' ')           // replace newlines with space
+      .replace(/\s+/g, ' ')           // normalize spaces
       .trim();
 
     try {

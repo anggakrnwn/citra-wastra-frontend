@@ -165,11 +165,51 @@ const AdminMotif = () => {
   const handleOpenEdit = (motif: Motif) => {
     setIsEditing(true);
     setCurrentId(motif.id);
+
+    // Logic for location splitting (Province vs Region)
+    let provinceToSet = (motif.province || "").trim();
+    let regionToSet = (motif.region || "").trim();
+
+    // 1. Fix cases where region is too broad (e.g. "Jawa") and province has city details
+    const broadRegions = ["jawa", "sumatera", "kalimantan", "sulawesi", "papua", "bali"];
+    if (broadRegions.includes(regionToSet.toLowerCase()) && provinceToSet.includes(",")) {
+      // If region is just "Jawa" and province is "Kota Yogyakarta, DI Yogyakarta"
+      // Swap them or prioritize province content
+      const parts = provinceToSet.split(",").map(p => p.trim());
+      regionToSet = parts[0];
+      provinceToSet = parts[1] || parts[0];
+    }
+
+    // 2. If province contains a comma (e.g. "Bali, Gianyar"), split it
+    else if (provinceToSet.includes(",")) {
+      const parts = provinceToSet.split(",").map(p => p.trim());
+      provinceToSet = parts[0];
+      // Append the second part to region if region is empty or generic
+      if (!regionToSet || regionToSet === "-" || broadRegions.includes(regionToSet.toLowerCase())) {
+        regionToSet = parts.slice(1).join(", ");
+      }
+    }
+
+    // 3. Special case for "DI Yogyakarta" and similar that might be in province
+    const foundProvince = provinces.find(p => 
+      provinceToSet.toLowerCase().includes(p.name.toLowerCase()) ||
+      p.name.toLowerCase().includes(provinceToSet.toLowerCase())
+    );
+
+    if (foundProvince) {
+      // If we found a match, but the province field had more info
+      if (provinceToSet.length > foundProvince.name.length && !regionToSet) {
+        // e.g. provinceToSet is "Kota Yogyakarta DI Yogyakarta"
+        regionToSet = provinceToSet.replace(foundProvince.name, "").replace(/[,]/g, "").trim();
+      }
+      provinceToSet = foundProvince.name;
+    }
+
     setFormData({
       name: motif.name,
       description: motif.description,
-      region: motif.region || "",
-      province: motif.province,
+      region: regionToSet,
+      province: provinceToSet,
       tags: motif.tags.join(", "),
       image: motif.image,
     });
@@ -229,8 +269,25 @@ const AdminMotif = () => {
         return;
       }
 
+      // Cleanup and standardize location data before saving
+      let finalProvince = formData.province.trim();
+      let finalRegion = formData.region.trim();
+
+      // Standardize "Yogyakarta" to "DI Yogyakarta" if it matches
+      if (finalProvince.toLowerCase().includes("yogyakarta") && !finalProvince.toLowerCase().includes("di")) {
+        finalProvince = "DI Yogyakarta";
+      }
+
+      // Try to match with standardized list from API if available
+      if (provinces.length > 0) {
+        const matched = provinces.find(p => p.name.toLowerCase() === finalProvince.toLowerCase());
+        if (matched) finalProvince = matched.name;
+      }
+
       const dataToSubmit = {
         ...formData,
+        province: finalProvince,
+        region: finalRegion,
         image: imageUrl,
         tags: formData.tags.split(",").map(t => t.trim()).filter(t => t !== ""),
       };
@@ -295,10 +352,10 @@ const AdminMotif = () => {
           </div>
           <div className="w-full md:w-64">
             <Select value={provinceFilter} onValueChange={setProvinceFilter}>
-              <SelectTrigger className="w-full bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+              <SelectTrigger className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                 <SelectValue placeholder="Semua Provinsi" />
               </SelectTrigger>
-              <SelectContent className="max-h-[300px] overflow-y-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <SelectContent className="max-h-[300px] overflow-y-auto bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                 <SelectItem value="all">Semua Provinsi</SelectItem>
                 {loadingProvinces ? (
                   <div className="p-2 text-center text-xs text-gray-500">Memuat provinsi...</div>
@@ -367,8 +424,8 @@ const AdminMotif = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 dark:text-white font-medium">{motif.province}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{motif.region}</div>
+                      <div className="text-sm text-gray-900 dark:text-white font-bold">{motif.region || "-"}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">{motif.province}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
@@ -468,15 +525,19 @@ const AdminMotif = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Provinsi</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Provinsi</label>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Pilih dari daftar</span>
+                  </div>
                   <Select 
+                    key={formData.province || 'empty'}
                     value={formData.province} 
                     onValueChange={(val) => setFormData(prev => ({ ...prev, province: val }))}
                   >
-                    <SelectTrigger className="w-full bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-                      <SelectValue placeholder="Pilih Provinsi" />
+                    <SelectTrigger className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                      <SelectValue placeholder={loadingProvinces ? "Memuat..." : "Pilih Provinsi"} />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px] overflow-y-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <SelectContent className="max-h-[300px] overflow-y-auto bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                       {loadingProvinces ? (
                         <div className="p-2 text-center text-xs text-gray-500">Memuat provinsi...</div>
                       ) : (
@@ -493,14 +554,17 @@ const AdminMotif = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Wilayah (Region)</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Wilayah (Region)</label>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Contoh: Gianyar, Solo, Pekalongan</span>
+                  </div>
                   <input
                     required
                     type="text"
                     className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                     value={formData.region}
                     onChange={e => setFormData(prev => ({ ...prev, region: e.target.value }))}
-                    placeholder="Contoh: Solo"
+                    placeholder="Masukkan nama kota/kabupaten"
                   />
                 </div>
                 <div className="space-y-2">

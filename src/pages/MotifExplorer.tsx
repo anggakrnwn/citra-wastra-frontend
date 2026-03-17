@@ -4,8 +4,14 @@ import type { MotifItem } from "../assets/data/dataset";
 import api, { motifService, galleryService } from "../services/api";
 import { WILAYAH_API_URL } from "../../config";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { useI18n } from "../context/I18nContext";
-import batikNames from "../assets/class_names.json";
 
 interface Province {
   id: string;
@@ -287,65 +293,46 @@ const MotifExplorer: React.FC = () => {
  useEffect(() => {
   const fetchData = async () => {
     try {
-      // Prioritaskan mengambil data gallery dari backend yang baru dibuat
-      const galleryRes = await galleryService.getAll();
-      const galleryData = Array.isArray(galleryRes.data) ? galleryRes.data : [];
-
-      if (galleryData.length > 0) {
-        const mappedData: MotifItem[] = galleryData.map((item: any) => {
-          const fileName = getExactImageName(item.name);
-          return {
-            id: `gallery-${item.index}`,
-            name: item.name,
-            image: `/gallery/${fileName}.jpg`,
-            description: item.description || item.philosophy || "Detail filosofi motif ini belum tersedia.",
-            province: item.location,
-            region: item.location.split(",")[0].trim() as any,
-            tags: ["Batik", "Tradisional"],
-            createdAt: new Date().toISOString()
-          };
-        });
-        setMotifs(mappedData);
+      setLoading(true);
+      // Fetch from gallery service which now pulls from database
+      const res = await galleryService.getAll();
+      let data = [];
+      
+      if (res.data && res.data.success) {
+        data = Array.isArray(res.data.data) ? res.data.data : [];
       } else {
-        // Fallback ke motifService jika gallery kosong
-        const dbres = await motifService.getAll();
-        let resdata = Array.isArray(dbres.data) ? dbres.data : [];
-        setMotifs(resdata);
+        data = Array.isArray(res.data) ? res.data : [];
+      }
+
+      if (data.length > 0) {
+        const mappedData: MotifItem[] = data.map((item: any) => ({
+          id: item.id || `motif-${Math.random()}`,
+          name: item.name,
+          image: item.image || `/gallery/${getExactImageName(item.name)}.jpg`,
+          description: item.description || item.philosophy,
+          province: item.province || item.location || "Unknown",
+          region: item.region || (item.location ? item.location.split(",")[0].trim() : ""),
+          tags: item.tags || ["Batik", "Tradisional"],
+        }));
+        setMotifs(mappedData);
       }
     } catch (err) {
-      console.log("Error API gallery, mencoba motifService atau fallback local");
+      console.error("Error fetching motifs for explorer:", err);
+      // Fallback to direct motif service if gallery fails
       try {
-        const dbres = await motifService.getAll();
-        let resdata = Array.isArray(dbres.data) ? dbres.data : [];
-        if (resdata.length > 0) {
-          setMotifs(resdata);
-          return;
+        const res = await motifService.getAll();
+        if (res.data && res.data.success) {
+          setMotifs(res.data.data);
         }
-      } catch (e) {
-        console.log("Error motifService, menggunakan local fallback");
+      } catch (fallbackErr) {
+        console.error("Fallback fetch failed:", fallbackErr);
       }
-      
-      const localData = batikNames.map((name, index) => {
-        const fileName = getExactImageName(name);
-        
-        return {
-          id: `local-${index}`,
-          name: name,
-          image: `/gallery/${fileName}.jpg`, 
-          description: "Klik untuk melihat detail filosofi motif ini.",
-          province: name.split(" ")[1] || "Indonesia", 
-          region: "Indonesia" as any, 
-          tags: ["Batik", "Tradisional"],
-          createdAt: new Date().toISOString()
-        };
-      });
-      setMotifs(localData);
     } finally {
       setLoading(false);
     }
   };
   fetchData();
-}, []);
+ }, []);
 
   const filtered = useMemo(() => {
     let data = [...motifs];
@@ -426,14 +413,19 @@ const MotifExplorer: React.FC = () => {
           </div>
 
           <div className="flex gap-2 sm:w-64">
-            <select
-              value={selectedProvinceId}
-              onChange={(e) => setSelectedProvinceId(e.target.value)}
-              className="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all outline-none appearance-none cursor-pointer"
-            >
-              <option value="">{t("gallery.allProvinces")}</option>
-              {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <Select value={selectedProvinceId} onValueChange={setSelectedProvinceId}>
+              <SelectTrigger className="w-full h-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all outline-none">
+                <SelectValue placeholder={t("gallery.allProvinces")} />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px] overflow-y-auto bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                <SelectItem value="all_provinces">{t("gallery.allProvinces")}</SelectItem>
+                {provinces.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
