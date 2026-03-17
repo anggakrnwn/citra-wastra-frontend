@@ -58,7 +58,6 @@ const AdminMotif = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -158,7 +157,6 @@ const AdminMotif = () => {
       image: "",
     });
     setImagePreview(null);
-    setSelectedFile(null);
     setShowModal(true);
   };
 
@@ -214,7 +212,6 @@ const AdminMotif = () => {
       image: motif.image,
     });
     setImagePreview(motif.image);
-    setSelectedFile(null);
     setShowModal(true);
   };
 
@@ -234,34 +231,47 @@ const AdminMotif = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
+      // 1. Show local preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // 2. Start immediate upload to Cloudinary
+      setUploading(true);
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append("image", file);
+        const uploadRes = await uploadService.upload(uploadFormData) as { data: { imageUrl: string } };
+        
+        // 3. Update form data with final URL
+        setFormData(prev => ({ ...prev, image: uploadRes.data.imageUrl }));
+        toast.success("Gambar berhasil diunggah");
+      } catch (err) {
+        toast.error("Gagal mengunggah gambar");
+        setImagePreview(formData.image || null); // revert preview
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (uploading) {
+      toast.error("Mohon tunggu, gambar sedang diunggah...");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      let imageUrl = formData.image;
-
-      // Upload image if a new file is selected
-      if (selectedFile) {
-        setUploading(true);
-        const uploadFormData = new FormData();
-        uploadFormData.append("image", selectedFile);
-        const uploadRes = await uploadService.upload(uploadFormData) as { data: { imageUrl: string } };
-        imageUrl = uploadRes.data.imageUrl;
-        setUploading(false);
-      }
+      const imageUrl = formData.image;
 
       if (!imageUrl) {
         toast.error("Gambar wajib diunggah");
@@ -310,7 +320,6 @@ const AdminMotif = () => {
       }
     } finally {
       setSubmitting(false);
-      setUploading(false);
     }
   };
 
