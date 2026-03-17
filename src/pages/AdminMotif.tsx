@@ -1,6 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import useSWR from "swr";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useWastra } from "../context/WastraContext";
 import { 
   Plus, 
   Search, 
@@ -10,7 +12,8 @@ import {
   X, 
   Loader2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,10 +43,7 @@ interface Pagination {
 }
 
 const AdminMotif = () => {
-  const [motifs, setMotifs] = useState<Motif[]>([]);
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const { user } = useWastra(); // Ensure we have context for user role if needed
   const [searchTerm, setSearchTerm] = useState("");
   const [provinceFilter, setProvinceFilter] = useState("all");
   const [pagination, setPagination] = useState<Pagination>({
@@ -71,64 +71,83 @@ const AdminMotif = () => {
     image: "",
   });
 
-  const fetchMotifs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-      });
+  // 1. Fetch Provinces using SWR
+  const { data: provincesData, isLoading: loadingProvinces } = useSWR(
+    "/api/wilayah/provinces",
+    async () => {
+      const res = await wilayahService.getProvinces() as { data: Province[] };
+      return res.data.map((p: any) => ({
+        id: p.id,
+        name: p.name.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      }));
+    },
+    { revalidateOnFocus: false, dedupingInterval: 3600000 } // Cache for 1 hour
+  );
 
-      if (searchTerm) params.append("search", searchTerm);
-      if (provinceFilter !== "all") params.append("province", provinceFilter);
+  const provinces = provincesData || [];
 
-      const res = await motifService.getAll(params.toString()) as { data: ApiResponse<Motif[]> };
+  // 2. Fetch Motifs using SWR
+  const swrKey = useMemo(() => {
+    const params = new URLSearchParams({
+      page: pagination.page.toString(),
+      limit: pagination.limit.toString(),
+    });
+    if (searchTerm) params.append("search", searchTerm);
+    if (provinceFilter !== "all") params.append("province", provinceFilter);
+    return `/api/motifs?${params.toString()}`;
+  }, [pagination.page, pagination.limit, searchTerm, provinceFilter]);
 
+  const { 
+    data: motifResponse, 
+    error, 
+    isLoading: loading, 
+    mutate: mutateMotifs,
+    isValidating: refreshing
+  } = useSWR(
+    swrKey,
+    async (url) => {
+      const query = url.split("?")[1] || "";
+      const res = await motifService.getAll(query) as { data: ApiResponse<Motif[]> };
+      
       if (res.data && res.data.success) {
-        setMotifs(res.data.data || []);
-        setPagination(res.data.pagination || pagination);
+        return res.data;
       } else {
         // Fallback for old API format
         const oldData = res.data as unknown as Motif[];
-        setMotifs(Array.isArray(oldData) ? oldData : []);
+        return {
+          success: true,
+          data: Array.isArray(oldData) ? oldData : [],
+          pagination: {
+            page: 1,
+            limit: 10,
+            total: Array.isArray(oldData) ? oldData.length : 0,
+            totalPages: 1
+          }
+        };
       }
-    } catch (err) {
-      if ((axios as any).isAxiosError(err)) {
-        toast.error((err as any).response?.data?.message || "Failed to fetch motifs");
-      } else {
-        toast.error("Failed to fetch motifs");
-      }
-    } finally {
-      setLoading(false);
+    },
+    { 
+      keepPreviousData: true, // Smooth loading when changing page/filters
+      revalidateOnFocus: false 
     }
-  }, [pagination.page, pagination.limit, searchTerm, provinceFilter]);
+  );
 
-  const fetchProvinces = useCallback(async () => {
-    setLoadingProvinces(true);
-    try {
-      const res = await wilayahService.getProvinces() as { data: Province[] };
-      if (res.data) {
-        // Transform names to Title Case if they are ALL CAPS
-        const formattedProvinces = res.data.map((p: any) => ({
-          id: p.id,
-          name: p.name.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-        }));
-        setProvinces(formattedProvinces);
-      }
-    } catch (err) {
-      console.error("Failed to fetch provinces:", err);
-    } finally {
-      setLoadingProvinces(false);
+  const motifs = motifResponse?.data || [];
+  
+  // Sync local pagination state with API response
+  useEffect(() => {
+    if (motifResponse?.pagination) {
+      setPagination(prev => {
+        if (
+          prev.total !== motifResponse.pagination?.total || 
+          prev.totalPages !== motifResponse.pagination?.totalPages
+        ) {
+          return motifResponse.pagination!;
+        }
+        return prev;
+      });
     }
-  }, []);
-
-  useEffect(() => {
-    fetchMotifs();
-  }, [fetchMotifs]);
-
-  useEffect(() => {
-    fetchProvinces();
-  }, [fetchProvinces]);
+  }, [motifResponse]);
 
   const handleOpenAdd = () => {
     setIsEditing(false);
@@ -168,7 +187,7 @@ const AdminMotif = () => {
     try {
       await motifService.delete(id);
       toast.success("Motif berhasil dihapus");
-      fetchMotifs();
+      mutateMotifs();
     } catch (err) {
       if ((axios as any).isAxiosError(err)) {
         toast.error((err as any).response?.data?.message || "Gagal menghapus motif");
@@ -228,7 +247,7 @@ const AdminMotif = () => {
       }
 
       setShowModal(false);
-      fetchMotifs();
+      mutateMotifs();
     } catch (err) {
       if ((axios as any).isAxiosError(err)) {
         toast.error((err as any).response?.data?.message || "Gagal menyimpan motif");
@@ -248,10 +267,21 @@ const AdminMotif = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manajemen Motif Batik</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Kelola data kelas batik untuk sistem AI dan Galeri.</p>
         </div>
-        <Button onClick={handleOpenAdd} className="bg-amber-600 hover:bg-amber-700 text-white flex gap-2">
-          <Plus className="w-4 h-4" />
-          Tambah Motif
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => mutateMotifs()} 
+            disabled={refreshing}
+            className="flex gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button onClick={handleOpenAdd} className="bg-amber-600 hover:bg-amber-700 text-white flex gap-2">
+            <Plus className="w-4 h-4" />
+            Tambah Motif
+          </Button>
+        </div>
       </div>
 
       <Card className="p-4 mb-6 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -322,8 +352,16 @@ const AdminMotif = () => {
                   <tr key={motif.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
-                          <img src={motif.image} alt={motif.name} className="w-full h-full object-cover" />
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0 relative">
+                          <img 
+                            src={motif.image} 
+                            alt={motif.name} 
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
+                            onLoad={(e) => (e.currentTarget.style.opacity = "1")}
+                          />
+                          {/* Skeleton placeholder while loading image */}
+                          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse -z-10" />
                         </div>
                         <div>
                           <div className="font-bold text-gray-900 dark:text-white">{motif.name}</div>
