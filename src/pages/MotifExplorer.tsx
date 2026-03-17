@@ -12,7 +12,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { useI18n } from "../context/I18nContext";
-import batikNames from "../assets/class_names.json";
 
 interface Province {
   id: string;
