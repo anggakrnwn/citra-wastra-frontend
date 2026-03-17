@@ -271,7 +271,7 @@ const AdminPredictionHistory = () => {
 
           {loading ? (
             <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <Skeleton key={i} className="h-20 w-full" />
               ))}
             </div>

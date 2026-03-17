@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
-import { Search, RefreshCw, Copy, Check } from "lucide-react";
+import { Search, RefreshCw, Copy, Check, Trash2, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -51,6 +51,9 @@ const SystemLogs = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearOlderThan, setClearOlderThan] = useState<string>("30");
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 100,
@@ -180,6 +183,71 @@ const SystemLogs = () => {
     }
   };
 
+  const handleClearLogs = async () => {
+    setClearing(true);
+    try {
+      const olderThan = clearOlderThan === "all" ? undefined : parseInt(clearOlderThan);
+      const res = await activityLogsService.clear(olderThan);
+      
+      if (res.data && res.data.success) {
+        toast.success(res.data.message || "Logs cleared successfully");
+        setShowClearConfirm(false);
+        fetchLogs();
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      toast.error(error.response?.data?.message || "Failed to clear activity logs");
+    } finally {
+      setClearing(false);
+    }
+  };
+
+
+  if (loading && logs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+
+        {/* Filters Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <Skeleton className="h-10 flex-1 rounded-lg" />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Skeleton className="h-10 w-full sm:w-[180px] rounded-lg" />
+            <Skeleton className="h-10 w-full sm:w-[180px] rounded-lg" />
+          </div>
+        </div>
+
+        {/* Logs List Skeleton */}
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="p-4 bg-transparent border border-gray-100 dark:border-gray-700">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-5 w-32" />
+                </div>
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -213,8 +281,73 @@ const SystemLogs = () => {
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowClearConfirm(true)}
+            className="flex items-center gap-2 flex-1 sm:flex-none text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-900/30"
+          >
+            <Trash2 className="w-4 h-4" />
+            Hapus Log
+          </Button>
         </div>
       </div>
+
+      {/* Clear Logs Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !clearing && setShowClearConfirm(false)} />
+          <Card className="relative w-full max-w-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-2xl p-6">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <AlertTriangle className="w-6 h-6" />
+              <h2 className="text-xl font-bold">Hapus Log Aktivitas</h2>
+            </div>
+            
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Tindakan ini akan menghapus log aktivitas sistem untuk mengoptimalkan database. Pilih rentang waktu log yang ingin dihapus.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Hapus log yang lebih tua dari:</label>
+              <Select value={clearOlderThan} onValueChange={setClearOlderThan}>
+                <SelectTrigger className="w-full bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                  <SelectValue placeholder="Pilih rentang waktu" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <SelectItem value="7">7 Hari</SelectItem>
+                  <SelectItem value="30">30 Hari (1 Bulan)</SelectItem>
+                  <SelectItem value="90">90 Hari (3 Bulan)</SelectItem>
+                  <SelectItem value="all">Semua Log (Kosongkan)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                disabled={clearing}
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Batal
+              </Button>
+              <Button
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                disabled={clearing}
+                onClick={handleClearLogs}
+              >
+                {clearing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  "Konfirmasi Hapus"
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
@@ -269,7 +402,7 @@ const SystemLogs = () => {
       {/* Logs List */}
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
             <Skeleton key={i} className="h-24 bg-transparent border border-gray-100 dark:border-gray-700" />
           ))}
         </div>
@@ -378,7 +511,7 @@ const SystemLogs = () => {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
             {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} logs
@@ -392,6 +525,12 @@ const SystemLogs = () => {
             >
               Previous
             </Button>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium px-3 py-1 bg-amber-600 text-white rounded-md">
+                {pagination.page}
+              </span>
+              <span className="text-sm text-gray-500">of {pagination.totalPages}</span>
+            </div>
             <Button
               variant="outline"
               size="sm"

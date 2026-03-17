@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { WastraContext, type User } from "./WastraContext";
-import { authService } from "../services/api";
+import { authService, userService } from "../services/api";
 import { AxiosError } from "axios";
 
 interface WastraContextProviderProps {
@@ -28,7 +28,47 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
     return null;
   });
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Verify session and sync role with server
+  useEffect(() => {
+    const verifySession = async () => {
+      const savedToken = localStorage.getItem("token");
+      if (!savedToken) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await userService.getProfile();
+        if (response.data && response.data.success && response.data.user) {
+          const serverUser = response.data.user;
+          const userWithRole = { ...serverUser, role: serverUser.role ?? "user" };
+          
+          // Update state and storage if role changed or data is out of sync
+          const savedUserStr = localStorage.getItem("user");
+          const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
+          
+          if (!savedUser || savedUser.role !== userWithRole.role || savedUser.email !== userWithRole.email || savedUser.name !== userWithRole.name || savedUser.profilePicture !== userWithRole.profilePicture) {
+            localStorage.setItem("user", JSON.stringify(userWithRole));
+            setUser(userWithRole);
+          }
+        }
+      } catch (error) {
+        // If 401/403, session is invalid
+        if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifySession();
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {

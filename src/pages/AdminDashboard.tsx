@@ -115,18 +115,43 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-64" />
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-80" />
+            <Skeleton className="h-3 w-40" />
           </div>
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
+
+        {/* Table Card Skeleton */}
+        <Card className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-40" />
+            
+            <div className="mt-8 space-y-6">
+              {/* Table Header Placeholder */}
+              <div className="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              
+              {/* Table Rows Placeholder */}
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }

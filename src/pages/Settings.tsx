@@ -185,11 +185,33 @@ const Settings = () => {
     });
   };
 
-  if (loading) {
+  if (loading && Object.keys(settings).length === 0) {
     return (
       <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <Skeleton className="h-10 w-24" />
+        </div>
+
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-64 bg-transparent border border-gray-100 dark:border-gray-700" />
+          <Card key={i} className="p-6 bg-transparent border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center mb-4">
+              <Skeleton className="w-5 h-5 mr-2" />
+              <Skeleton className="h-6 w-32" />
+            </div>
+            <Skeleton className="h-4 w-64 mb-6" />
+            <div className="space-y-6">
+              {[1, 2].map((j) => (
+                <div key={j} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+          </Card>
         ))}
       </div>
     );

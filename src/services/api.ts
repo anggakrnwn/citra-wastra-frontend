@@ -164,26 +164,28 @@ export const ttsService = {
   },
 };
 
+export const uploadService = {
+  upload: (formData: FormData) => {
+    return api.post("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+};
+
 export const motifService = {
   getAll: (params?: string) => {
     const url = params ? `/api/motifs?${params}` : "/api/motifs";
     return api.get(url);
   },
 
-  create: (formData: FormData) => {
-    return api.post("/api/motifs", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  create: (data: any) => {
+    return api.post("/api/motifs", data);
   },
 
-  update: (id: string, formData: FormData) => {
-    return api.put(`/api/motifs/${id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  update: (id: string, data: any) => {
+    return api.put(`/api/motifs/${id}`, data);
   },
 
   delete: (id: string) => {
@@ -294,16 +296,6 @@ export const predictionHistoryService = {
   },
 };
 
-export const uploadService = {
-  upload: (formData: FormData) => {
-    return api.post("/api/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  },
-};
-
 export const predictionReviewService = {
   getForReview: (params?: string) => {
     const url = params ? `/api/predict/review?${params}` : "/api/predict/review";
@@ -348,6 +340,11 @@ export const activityLogsService = {
     const url = params ? `/api/logs?${params}` : "/api/logs";
     return api.get(url);
   },
+
+  clear: (olderThanDays?: number) => {
+    const url = olderThanDays ? `/api/logs/clear?olderThanDays=${olderThanDays}` : "/api/logs/clear";
+    return api.delete(url);
+  },
 };
 
 export const settingsService = {
@@ -370,6 +367,24 @@ export const settingsService = {
 
   delete: (key: string) => {
     return api.delete(`/api/settings/${key}`);
+  },
+};
+
+export const wilayahService = {
+  getProvinces: () => {
+    return api.get("/api/wilayah/provinces");
+  },
+
+  getRegencies: (provinceId: string) => {
+    return api.get(`/api/wilayah/regencies/${provinceId}`);
+  },
+
+  getDistricts: (regencyId: string) => {
+    return api.get(`/api/wilayah/districts/${regencyId}`);
+  },
+
+  getVillages: (districtId: string) => {
+    return api.get(`/api/wilayah/villages/${districtId}`);
   },
 };
 

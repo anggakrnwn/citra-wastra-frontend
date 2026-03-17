@@ -251,7 +251,7 @@ const AdminUsers = () => {
 
       <div className="space-y-4">
         {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
+          Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="p-4 bg-transparent border border-gray-100 dark:border-gray-700">
               <div className="flex justify-between items-center">
                 <div>

@@ -280,7 +280,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors py-8">
+      <div className="py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="mb-8">
             <Skeleton className="h-8 w-48 mb-2" />
@@ -294,7 +294,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors py-8">
+    <div className="py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -346,10 +346,9 @@ const Profile = () => {
                   type="text"
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
-                  onBlur={handleUpdateName}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.currentTarget.blur();
+                      handleUpdateName();
                     }
                   }}
                   disabled={savingName}
@@ -373,6 +372,15 @@ const Profile = () => {
                              cursor-not-allowed text-sm"
                   placeholder="Email"
                 />
+              </div>
+              <div className="pt-2 flex justify-end">
+                <Button
+                  onClick={handleUpdateName}
+                  disabled={savingName || nameValue.trim() === (profile?.name || "")}
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 h-auto"
+                >
+                  {savingName ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </div>
           </div>

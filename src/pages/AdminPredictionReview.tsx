@@ -214,6 +214,52 @@ const AdminPredictionReview = () => {
     }
   };
 
+  if (loading && predictions.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </div>
+
+        {/* Filters Skeleton */}
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <Skeleton className="h-10 flex-1 rounded-lg" />
+          <Skeleton className="h-10 w-full md:w-[180px] rounded-lg" />
+        </div>
+
+        {/* Predictions List Skeleton */}
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="p-4 bg-transparent border border-gray-100 dark:border-gray-700">
+              <div className="flex gap-4">
+                <Skeleton className="w-24 h-24 rounded-lg shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -318,8 +364,20 @@ const AdminPredictionReview = () => {
       {/* Predictions List */}
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 bg-transparent border border-gray-100 dark:border-gray-700" />
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <Card key={i} className="p-4 bg-transparent border border-gray-100 dark:border-gray-700">
+              <div className="flex gap-4">
+                <Skeleton className="w-24 h-24 rounded-lg shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            </Card>
           ))}
         </div>
       ) : filteredPredictions.length === 0 ? (
