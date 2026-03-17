@@ -243,15 +243,22 @@ const AdminMotif = () => {
 
       // 2. Start immediate upload to Cloudinary
       setUploading(true);
+      const startTime = Date.now();
+      console.log(`[Upload] Starting upload for: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+      
       try {
         const uploadFormData = new FormData();
         uploadFormData.append("image", file);
         const uploadRes = await uploadService.upload(uploadFormData) as { data: { imageUrl: string } };
         
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`[Upload] Success! URL: ${uploadRes.data.imageUrl} (Took ${duration}s)`);
+        
         // 3. Update form data with final URL
         setFormData(prev => ({ ...prev, image: uploadRes.data.imageUrl }));
-        toast.success("Gambar berhasil diunggah");
+        toast.success(`Gambar berhasil diunggah (${duration}s)`);
       } catch (err) {
+        console.error(`[Upload] Failed!`, err);
         toast.error("Gagal mengunggah gambar");
         setImagePreview(formData.image || null); // revert preview
       } finally {
