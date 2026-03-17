@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { WastraContext, type User } from "./WastraContext";
 import { authService, userService } from "../services/api";
-import { AxiosError } from "axios";
+import axios from "axios";
 
 interface WastraContextProviderProps {
   children: ReactNode;
@@ -40,9 +40,9 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
       }
 
       try {
-        const response = await userService.getProfile();
-        if (response.data && response.data.success && response.data.user) {
-          const serverUser = response.data.user;
+        const response = await userService.getProfile() as any;
+        if (response.data && response.data.success && response.data.data?.user) {
+          const serverUser = response.data.data.user;
           const userWithRole = { ...serverUser, role: serverUser.role ?? "user" };
           
           // Update state and storage if role changed or data is out of sync
@@ -54,9 +54,9 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
             setUser(userWithRole);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         // If 401/403, session is invalid
-        if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {
+        if ((axios as any).isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           setToken(null);
@@ -93,7 +93,7 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
 
   const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await authService.login(email, password);
+      const response = await authService.login(email, password) as any;
       const { token: newToken, user } = response.data;
 
       if (newToken && user) {
@@ -107,17 +107,17 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
       }
       return { success: false, message: "Login failed: no token received" };
     } catch (error: unknown) {
-      if (error instanceof AxiosError) {
+      if ((axios as any).isAxiosError(error)) {
         // Handle maintenance mode (503)
-        if (error.response?.status === 503 && error.response?.data?.maintenance) {
+        if ((error as any).response?.status === 503 && (error as any).response?.data?.maintenance) {
           return {
             success: false,
-            message: error.response?.data?.message || "Sistem sedang dalam tahap maintenance. Silakan coba lagi nanti.",
+            message: (error as any).response?.data?.message || "Sistem sedang dalam tahap maintenance. Silakan coba lagi nanti.",
           };
         }
         
         // Handle rate limit error (429)
-        if (error.response?.status === 429) {
+        if ((error as any).response?.status === 429) {
           return {
             success: false,
             message: "Too many login attempts. Please wait a few minutes before trying again.",
@@ -125,9 +125,9 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
         }
         
         // Handle other errors
-        const errorMessage = error.response?.data?.message || 
-                            error.response?.data?.error ||
-                            error.message ||
+        const errorMessage = (error as any).response?.data?.message || 
+                            (error as any).response?.data?.error ||
+                            (error as any).message ||
                             "Login failed";
         
         return {
@@ -141,7 +141,7 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
 
   const register = async (name: string, email: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await authService.register(name, email, password);
+      const response = await authService.register(name, email, password) as any;
       const { token: newToken, user } = response.data;
 
       if (newToken && user) {
@@ -155,11 +155,11 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
       }
       return { success: false, message: "Registration failed: no token received" };
     } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 429) {
+      if ((axios as any).isAxiosError(error)) {
+        if ((error as any).response?.status === 429) {
           return { success: false, message: "Too many requests, please wait a moment" };
         }
-        const data = error.response?.data;
+        const data = (error as any).response?.data as any;
         const detailedMessage = Array.isArray(data?.errors)
           ? (data.errors as { message: string }[]).map((e) => e.message).join(", ")
           : data?.message;
@@ -216,7 +216,7 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
                   userInfo.name || "",
                   userInfo.email || "",
                   userInfo.picture || undefined
-                );
+                ) as any;
                 
                 const { token: newToken, user: backendUser } = apiResponse.data;
 
@@ -232,10 +232,10 @@ export const WastraContextProvider = ({ children }: WastraContextProviderProps) 
                   resolve({ success: false, message: "Google login failed: no token received" });
                 }
               } catch (error: unknown) {
-                if (error instanceof AxiosError) {
+                if ((axios as any).isAxiosError(error)) {
                   resolve({
                     success: false,
-                    message: error.response?.data?.message || error.message || "Google login failed",
+                    message: (error as any).response?.data?.message || (error as any).message || "Google login failed",
                   });
                 } else if (error instanceof Error) {
                   resolve({ success: false, message: error.message });

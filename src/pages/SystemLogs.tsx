@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Search, RefreshCw, Copy, Check, Trash2, AlertTriangle } from "lucide-react";
 
@@ -79,17 +78,16 @@ const SystemLogs = () => {
         params.append("entityType", entityTypeFilter);
       }
 
-      const res = await activityLogsService.getAll(params.toString());
+      const res = await activityLogsService.getAll(params.toString()) as any;
 
       if (res.data && res.data.success) {
         setLogs(res.data.data || []);
         setPagination(res.data.pagination || pagination);
         setLastUpdated(new Date());
       }
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
+    } catch (err: any) {
       if (!silent) {
-        toast.error(error.response?.data?.message || "Failed to fetch activity logs");
+        toast.error(err.response?.data?.message || "Failed to fetch activity logs");
       }
     } finally {
       setLoading(false);
@@ -187,16 +185,15 @@ const SystemLogs = () => {
     setClearing(true);
     try {
       const olderThan = clearOlderThan === "all" ? undefined : parseInt(clearOlderThan);
-      const res = await activityLogsService.clear(olderThan);
+      const res = await activityLogsService.clear(olderThan) as any;
       
       if (res.data && res.data.success) {
         toast.success(res.data.message || "Logs cleared successfully");
         setShowClearConfirm(false);
         fetchLogs();
       }
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to clear activity logs");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to clear activity logs");
     } finally {
       setClearing(false);
     }

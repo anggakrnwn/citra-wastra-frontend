@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { CheckCircle2, XCircle, Search, Download } from "lucide-react";
 
@@ -73,15 +72,14 @@ const AdminPredictionReview = () => {
         params.append("status", statusFilter);
       }
 
-      const res = await predictionReviewService.getForReview(params.toString());
+      const res = await predictionReviewService.getForReview(params.toString()) as any;
 
       if (res.data && res.data.success) {
         setPredictions(res.data.data || []);
         setPagination(res.data.pagination || pagination);
       }
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to fetch predictions");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to fetch predictions");
     } finally {
       setLoading(false);
     }
@@ -103,9 +101,8 @@ const AdminPredictionReview = () => {
       toast.success(`Prediction ${status} successfully`);
       fetchPredictions();
       setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || `Failed to ${status} prediction`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || `Failed to ${status} prediction`);
     } finally {
       setReviewing(null);
     }
@@ -137,9 +134,8 @@ const AdminPredictionReview = () => {
       toast.success(`Successfully ${status} ${pendingSelected.length} prediction${pendingSelected.length > 1 ? "s" : ""}`);
       fetchPredictions();
       setSelectedIds([]);
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to batch review predictions");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to batch review predictions");
     } finally {
       setBatchReviewing(false);
     }
@@ -152,7 +148,7 @@ const AdminPredictionReview = () => {
         filters.status = statusFilter;
       }
 
-      const response = await exportService.exportPredictions(format, filters);
+      const response = await exportService.exportPredictions(format, filters) as any;
       
       const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);

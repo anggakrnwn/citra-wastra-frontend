@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { AxiosError } from "axios";
+import axios from "axios";
 import { toast } from "react-hot-toast";
 import { 
   Plus, 
@@ -10,9 +10,7 @@ import {
   X, 
   Loader2,
   ChevronLeft,
-  ChevronRight,
-  Filter,
-  MapPin
+  ChevronRight
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,17 +25,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { motifService, uploadService, wilayahService } from "@/services/api";
-
-interface Motif {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  region: string;
-  province: string;
-  tags: string[];
-  createdAt: string;
-}
+import type { ApiResponse, Motif } from "@/types/api";
 
 interface Province {
   id: string;
@@ -94,18 +82,22 @@ const AdminMotif = () => {
       if (searchTerm) params.append("search", searchTerm);
       if (provinceFilter !== "all") params.append("province", provinceFilter);
 
-      const res = await motifService.getAll(params.toString());
+      const res = await motifService.getAll(params.toString()) as { data: ApiResponse<Motif[]> };
 
       if (res.data && res.data.success) {
         setMotifs(res.data.data || []);
         setPagination(res.data.pagination || pagination);
       } else {
         // Fallback for old API format
-        setMotifs(Array.isArray(res.data) ? res.data : []);
+        const oldData = res.data as unknown as Motif[];
+        setMotifs(Array.isArray(oldData) ? oldData : []);
       }
     } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Failed to fetch motifs");
+      if ((axios as any).isAxiosError(err)) {
+        toast.error((err as any).response?.data?.message || "Failed to fetch motifs");
+      } else {
+        toast.error("Failed to fetch motifs");
+      }
     } finally {
       setLoading(false);
     }
@@ -114,7 +106,7 @@ const AdminMotif = () => {
   const fetchProvinces = useCallback(async () => {
     setLoadingProvinces(true);
     try {
-      const res = await wilayahService.getProvinces();
+      const res = await wilayahService.getProvinces() as { data: Province[] };
       if (res.data) {
         // Transform names to Title Case if they are ALL CAPS
         const formattedProvinces = res.data.map((p: any) => ({
@@ -178,8 +170,11 @@ const AdminMotif = () => {
       toast.success("Motif berhasil dihapus");
       fetchMotifs();
     } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Gagal menghapus motif");
+      if ((axios as any).isAxiosError(err)) {
+        toast.error((err as any).response?.data?.message || "Gagal menghapus motif");
+      } else {
+        toast.error("Gagal menghapus motif");
+      }
     }
   };
 
@@ -207,7 +202,7 @@ const AdminMotif = () => {
         setUploading(true);
         const uploadFormData = new FormData();
         uploadFormData.append("image", selectedFile);
-        const uploadRes = await uploadService.upload(uploadFormData);
+        const uploadRes = await uploadService.upload(uploadFormData) as { data: { imageUrl: string } };
         imageUrl = uploadRes.data.imageUrl;
         setUploading(false);
       }
@@ -235,8 +230,11 @@ const AdminMotif = () => {
       setShowModal(false);
       fetchMotifs();
     } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || "Gagal menyimpan motif");
+      if ((axios as any).isAxiosError(err)) {
+        toast.error((err as any).response?.data?.message || "Gagal menyimpan motif");
+      } else {
+        toast.error("Gagal menyimpan motif");
+      }
     } finally {
       setSubmitting(false);
       setUploading(false);

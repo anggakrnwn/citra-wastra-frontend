@@ -3,7 +3,7 @@ import axios from "axios";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // Create axios instance
-const api = axios.create({
+const api: any = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -12,14 +12,14 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
+  (config: any) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: any) => Promise.reject(error)
 );
 
 // Navigation callback for auth redirects
@@ -31,8 +31,8 @@ export function setAuthRedirectCallback(callback: (path: string) => void) {
 
 // Response interceptor to handle auth errors and maintenance mode
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: any) => response,
+  (error: any) => {
     // Handle maintenance mode (503)
     if (error.response?.status === 503 && error.response?.data?.maintenance) {
       // Don't redirect for maintenance mode, just show the error message
