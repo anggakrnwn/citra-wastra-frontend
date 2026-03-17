@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import useSWR from "swr";
 import { toast } from "react-hot-toast";
-import { Trash2, Download, Search, X, Image as ImageIcon, RefreshCw } from "lucide-react";
+import { Trash2, Download, Search, X, Image as ImageIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,13 +58,11 @@ const AdminPredictionHistory = () => {
   // 2. Fetch data using SWR
   const { 
     data: historyResponse, 
-    error, 
     isLoading: loading, 
     mutate,
-    isValidating: refreshing
   } = useSWR(
     swrKey,
-    async (url) => {
+    async (url: string) => {
       const query = url.split("?")[1] || "";
       const res = await predictionHistoryService.getAll(query) as any;
       if (res.data && res.data.success) {
@@ -79,7 +77,7 @@ const AdminPredictionHistory = () => {
     }
   );
 
-  const history = historyResponse?.data || [];
+  const history: PredictionHistory[] = historyResponse?.data || [];
 
   // Sync pagination from server
   useEffect(() => {
@@ -144,7 +142,7 @@ const AdminPredictionHistory = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(history.map((h) => h.id));
+      setSelectedIds(history.map((h: PredictionHistory) => h.id));
     } else {
       setSelectedIds([]);
     }
@@ -286,7 +284,7 @@ const AdminPredictionHistory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {history.map((item) => (
+                    {history.map((item: PredictionHistory) => (
                       <tr
                         key={item.id}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -489,7 +487,7 @@ const AdminPredictionHistory = () => {
               <button
                 onClick={async () => {
                   const imageUrl = predictionHistoryService.getImageUrl(viewingImage);
-                  const historyItem = history.find((h) => h.id === viewingImage);
+                  const historyItem = history.find((h: PredictionHistory) => h.id === viewingImage);
                   const filename = historyItem?.imageName || `prediction-${viewingImage}.png`;
                   
                   try {
@@ -545,7 +543,7 @@ const AdminPredictionHistory = () => {
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
                   {(() => {
-                    const historyItem = history.find((h) => h.id === viewingImage);
+                    const historyItem = history.find((h: PredictionHistory) => h.id === viewingImage);
                     if (historyItem?.createdAt) {
                       const createdDate = new Date(historyItem.createdAt);
                       const cutoffDate = new Date('2025-12-14');
@@ -560,7 +558,7 @@ const AdminPredictionHistory = () => {
             </div>
             <div className="px-4 pb-4 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {history.find((h) => h.id === viewingImage)?.imageName || "Image"}
+                {history.find((h: PredictionHistory) => h.id === viewingImage)?.imageName || "Image"}
               </p>
             </div>
           </div>

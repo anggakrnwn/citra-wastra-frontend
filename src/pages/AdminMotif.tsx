@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useSWR from "swr";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -43,7 +43,6 @@ interface Pagination {
 }
 
 const AdminMotif = () => {
-  const { user } = useWastra(); // Ensure we have context for user role if needed
   const [searchTerm, setSearchTerm] = useState("");
   const [provinceFilter, setProvinceFilter] = useState("all");
   const [pagination, setPagination] = useState<Pagination>({
@@ -99,7 +98,6 @@ const AdminMotif = () => {
 
   const { 
     data: motifResponse, 
-    error, 
     isLoading: loading, 
     mutate: mutateMotifs,
     isValidating: refreshing
