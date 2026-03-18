@@ -298,9 +298,7 @@ const AdminMotif = () => {
       
       try {
         // Compress image before uploading
-        console.log(`[Upload] Original size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
         const compressedBlob = await compressImage(file);
-        console.log(`[Upload] Compressed size: ${(compressedBlob.size / 1024 / 1024).toFixed(2)} MB`);
         
         const uploadFormData = new FormData();
         uploadFormData.append("image", compressedBlob, file.name.replace(/\.[^/.]+$/, ".jpg"));
@@ -308,13 +306,11 @@ const AdminMotif = () => {
         const uploadRes = await uploadService.upload(uploadFormData) as { data: { imageUrl: string } };
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`[Upload] Success! URL: ${uploadRes.data.imageUrl} (Took ${duration}s)`);
         
         // 3. Update form data with final URL
         setFormData(prev => ({ ...prev, image: uploadRes.data.imageUrl }));
         toast.success(`Gambar berhasil diunggah (${duration}s)`);
       } catch (err) {
-        console.error(`[Upload] Failed!`, err);
         toast.error("Gagal mengunggah gambar");
         setImagePreview(formData.image || null); // revert preview
       } finally {
