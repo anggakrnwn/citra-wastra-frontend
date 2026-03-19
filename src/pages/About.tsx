@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Linkedin,
   Github,
@@ -21,6 +22,17 @@ import Footer from "../components/Footer";
 
 const About: React.FC = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
+
+  const handleCTAClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/detection-page");
+    } else {
+      navigate("/login");
+    }
+  };
 
   const objectives = [
     t("about.objective1"),
@@ -419,13 +431,13 @@ const About: React.FC = () => {
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
               {t("about.ctaSubtitle")}
             </p>
-            <a
-              href="/detection"
+            <button
+              onClick={handleCTAClick}
               className="inline-flex items-center px-8 py-4 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition shadow-lg"
             >
               <Play className="mr-2" size={20} />
               {t("about.ctaButton")}
-            </a>
+            </button>
           </motion.div>
         </div>
       </div>
