@@ -301,7 +301,7 @@ const messages: Record<Lang, Record<string, string>> = {
     "about.objective3": "Akurasi Presisi Tinggi\nMencapai akurasi validasi 99,46%, memberikan klasifikasi yang hampir sempurna bahkan untuk pola batik yang rumit dan tumpang tindih.",
     "about.objective4": "Rekayasa Backend\nMembangun API orkestrasi yang tangguh menggunakan Node.js, Express, dan Prisma ORM untuk mengelola autentikasi, metadata budaya, serta integrasi inferensi model Deep Learning melalui Hugging Face secara real-time.",
     "about.objective5": "Frontend Interaktif\nMembangun aplikasi web modern dan responsif menggunakan React 19, Vite, Tailwind CSS, dan Framer Motion demi pengalaman pengguna yang lancar dan estetis.",
-    "about.objective6": "Integrasi Cloud & AR\nMemanfaatkan Hugging Face untuk inferensi cloud berkinerja tinggi, Cloudinary untuk manajemen aset yang optimal, dan penampil model untuk menghidupkan motif batik melalui visualisasi 3D interaktif.",
+    "about.objective6": "Integrasi Cloud & 3D\nMemanfaatkan Hugging Face untuk inferensi cloud berkinerja tinggi, Cloudinary untuk manajemen aset yang optimal, dan penampil model untuk menghidupkan motif batik melalui visualisasi 3D interaktif.",
     "about.developersTitle": "Profil Pengembang",
     "about.developersSubtitle": "Sosok di balik Citra Wastra",
     "about.disclaimerTitle": "Pernyataan Penting",
